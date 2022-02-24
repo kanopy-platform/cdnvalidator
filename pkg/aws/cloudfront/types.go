@@ -3,11 +3,13 @@ package cloudfront
 import (
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront/cloudfrontiface"
 )
 
 type Client struct {
 	cfApi   cloudfrontiface.CloudFrontAPI
+	awsCfg  *aws.Config
 	timeout time.Duration
 }
 

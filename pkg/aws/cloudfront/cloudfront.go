@@ -6,38 +6,43 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	cf "github.com/aws/aws-sdk-go/service/cloudfront"
 )
 
-func NewClient(id string, secret string) (*Client, error) {
-	session, err := session.NewSession(&aws.Config{
-		Region:      aws.String("us-east-1"),
-		Credentials: credentials.NewStaticCredentials(id, secret, ""),
-	})
+// TODO use functional options WithStaticCredentials or WithSessionConfig
+// allow for testing using CLI or StaticCredentials
+// STS
+func NewClient(opts ...Option) (*Client, error) {
+	client := &Client{
+		awsCfg:  &aws.Config{},
+		timeout: 30 * time.Second,
+	}
+
+	for _, opt := range opts {
+		opt(client)
+	}
+
+	session, err := session.NewSession(client.awsCfg)
 	if err != nil {
 		return nil, err
 	}
 
-	client := &Client{
-		cfApi:   cf.New(session),
-		timeout: 5 * time.Second,
-	}
+	client.cfApi = cf.New(session)
 
 	return client, nil
 }
 
 // currentTimeSeconds returns the current UTC time formatted using the format string
 //	"20060102150405"
-// which translates to: "2006-01-02 15:04:05"
+// which means: "2006-01-02 15:04:05"
 func currentTimeSeconds() string {
 	t := time.Now().UTC()
 	return t.Format("20060102150405")
 }
 
 // checkInvalidation verifies the Invalidation struct's pointers are non-nil
-func checkInvalidation(invalidation *cf.Invalidation) error {
+func checkInvalidationStruct(invalidation *cf.Invalidation) error {
 	if invalidation == nil {
 		return fmt.Errorf("cloudfront Invalidation struct set to nil")
 	}
@@ -73,7 +78,7 @@ func checkInvalidation(invalidation *cf.Invalidation) error {
 	return nil
 }
 
-// CreateInvalidation calls the aws-sdk-go API for creating a cloudfront invalidation
+// CreateInvalidation creates an Invalidation request
 //
 // Invalidations to the same distributionId and paths combination can be created every second.
 // Any additional requests within that time interval is a no-op.
@@ -84,7 +89,7 @@ func (c *Client) CreateInvalidation(distributionId string, paths []string) (*Cre
 	output, err := c.cfApi.CreateInvalidationWithContext(ctx, &cf.CreateInvalidationInput{
 		DistributionId: aws.String(distributionId),
 		InvalidationBatch: &cf.InvalidationBatch{
-			CallerReference: aws.String(currentTimeSeconds()),
+			CallerReference: aws.String(currentTimeSeconds()), // TOOD comment why this is here
 			Paths: &cf.Paths{
 				Items:    aws.StringSlice(paths),
 				Quantity: aws.Int64(int64(len(paths))),
@@ -95,7 +100,7 @@ func (c *Client) CreateInvalidation(distributionId string, paths []string) (*Cre
 		return nil, err
 	}
 
-	if err := checkInvalidation(output.Invalidation); err != nil {
+	if err := checkInvalidationStruct(output.Invalidation); err != nil {
 		return nil, err
 	}
 	invalidation := *output.Invalidation
@@ -108,7 +113,7 @@ func (c *Client) CreateInvalidation(distributionId string, paths []string) (*Cre
 	return response, nil
 }
 
-// GetInvalidation calls the aws-sdk-go API for getting a cloudfront invalidation
+// GetInvalidation retrieves information about the given invalidation request
 func (c *Client) GetInvalidation(distributionId string, invalidationId string) (*GetInvalidationOutput, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
@@ -121,7 +126,7 @@ func (c *Client) GetInvalidation(distributionId string, invalidationId string) (
 		return nil, err
 	}
 
-	if err := checkInvalidation(output.Invalidation); err != nil {
+	if err := checkInvalidationStruct(output.Invalidation); err != nil {
 		return nil, err
 	}
 	invalidation := *output.Invalidation
