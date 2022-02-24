@@ -10,9 +10,6 @@ import (
 	cf "github.com/aws/aws-sdk-go/service/cloudfront"
 )
 
-// TODO use functional options WithStaticCredentials or WithSessionConfig
-// allow for testing using CLI or StaticCredentials
-// STS
 func NewClient(opts ...Option) (*Client, error) {
 	client := &Client{
 		awsCfg:  &aws.Config{},
@@ -23,6 +20,8 @@ func NewClient(opts ...Option) (*Client, error) {
 		opt(client)
 	}
 
+	// By default, if no StaticCredentials are provided, NewSession will use environment variables
+	// AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN
 	session, err := session.NewSession(client.awsCfg)
 	if err != nil {
 		return nil, err
@@ -33,7 +32,7 @@ func NewClient(opts ...Option) (*Client, error) {
 	return client, nil
 }
 
-// currentTimeSeconds returns the current UTC time formatted using the format string
+// Returns the current UTC time formatted using the format string
 //	"20060102150405"
 // which means: "2006-01-02 15:04:05"
 func currentTimeSeconds() string {
@@ -41,7 +40,7 @@ func currentTimeSeconds() string {
 	return t.Format("20060102150405")
 }
 
-// checkInvalidation verifies the Invalidation struct's pointers are non-nil
+// Verifies the Invalidation struct's pointers are non-nil
 func checkInvalidationStruct(invalidation *cf.Invalidation) error {
 	if invalidation == nil {
 		return fmt.Errorf("cloudfront Invalidation struct set to nil")
@@ -78,10 +77,7 @@ func checkInvalidationStruct(invalidation *cf.Invalidation) error {
 	return nil
 }
 
-// CreateInvalidation creates an Invalidation request
-//
-// Invalidations to the same distributionId and paths combination can be created every second.
-// Any additional requests within that time interval is a no-op.
+// Creates an Invalidation request
 func (c *Client) CreateInvalidation(distributionId string, paths []string) (*CreateInvalidationOutput, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
@@ -89,7 +85,10 @@ func (c *Client) CreateInvalidation(distributionId string, paths []string) (*Cre
 	output, err := c.cfApi.CreateInvalidationWithContext(ctx, &cf.CreateInvalidationInput{
 		DistributionId: aws.String(distributionId),
 		InvalidationBatch: &cf.InvalidationBatch{
-			CallerReference: aws.String(currentTimeSeconds()), // TOOD comment why this is here
+			// Using CallerReference as unique identifier for Invalidation request.
+			// Effectively rate limits CreateInvalidation requests for the same (Distribution_Id, Paths)
+			// to once per second.
+			CallerReference: aws.String(currentTimeSeconds()),
 			Paths: &cf.Paths{
 				Items:    aws.StringSlice(paths),
 				Quantity: aws.Int64(int64(len(paths))),
@@ -113,7 +112,7 @@ func (c *Client) CreateInvalidation(distributionId string, paths []string) (*Cre
 	return response, nil
 }
 
-// GetInvalidation retrieves information about the given invalidation request
+// Retrieves information about the given invalidation request
 func (c *Client) GetInvalidation(distributionId string, invalidationId string) (*GetInvalidationOutput, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
