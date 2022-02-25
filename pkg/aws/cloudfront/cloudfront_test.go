@@ -2,14 +2,18 @@ package cloudfront
 
 import (
 	"context"
+	"flag"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	cf "github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type mockCloudFrontClient struct {
@@ -141,4 +145,51 @@ func TestGetInvalidation(t *testing.T) {
 			assert.Equal(t, test.paths, output.Paths)
 		}
 	}
+}
+
+var distributionID = flag.String("distribution", "", "A Cloudfront distribution ID to perform an invalidation against.")
+var pathsArg = flag.String("paths", "", "Comma separated list of paths")
+var accessID = flag.String("access-id", "", "Default uses local aws profile")
+var accessSecret = flag.String("access-secret", "", "Default uses local aws profile")
+
+func TestIntegrationCloudfrontInvalidation(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
+
+	t.Parallel()
+
+	if *distributionID == "" {
+		t.Fatal("-distribution missing")
+	}
+
+	if *pathsArg == "" {
+		t.Fatal("-paths missing")
+	}
+
+	opts := []Option{
+		WithAwsRegion("us-east-1"),
+		WithTimeout(time.Duration(30) * time.Second),
+	}
+
+	if *accessID != "" && *accessSecret != "" {
+		opts = append(opts, WithStaticCredentials(*accessID, *accessSecret))
+	}
+
+	c, err := New(opts...)
+	require.NoError(t, err)
+
+	log.Info("Creating Invalidation...")
+
+	paths := strings.Split(*pathsArg, ",")
+
+	create, err := c.CreateInvalidation(context.Background(), *distributionID, paths)
+	require.NoError(t, err)
+
+	log.Infof("Created Invalidation: Id=%v, Status=%v", create.InvalidationId, create.Status)
+
+	get, err := c.GetInvalidation(context.Background(), *distributionID, create.InvalidationId)
+	require.NoError(t, err)
+
+	log.Infof("Got Invalidation %v: CreateTime=%v, Status=%v, Paths=%v", create.InvalidationId, get.CreateTime, get.Status, get.Paths)
 }

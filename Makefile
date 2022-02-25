@@ -8,7 +8,14 @@ PKG ?= ./...
 .PHONY: test
 test: ## Run tests in local environment
 	golangci-lint run --timeout=5m $(PKG)
-	go test -cover -run=$(RUN) $(PKG)
+	go test -short -cover -run=$(RUN) $(PKG)
+
+.PHONY: test-integration
+test-integration: ## Run integration tests
+# Need to pass in args. Example:
+# make test-integration DISTRIBUTION="<distribution>" PATHS="<comma separated paths>"
+# make test-integration DISTRIBUTION="<distribution>" PATHS="<comma separated paths>" ACCESS_ID="<aws id>" ACCESS_SECRET="<aws secret>"
+	go test -run=Integration -v ./.../cloudfront -args -distribution=$(DISTRIBUTION) -paths=$(PATHS) -access-id=$(ACCESS_ID) -access-secret=$(ACCESS_SECRET)
 
 .PHONY: docker-build-test
 docker-build-test: ## Build local development docker image with cached go modules, builds, and tests
