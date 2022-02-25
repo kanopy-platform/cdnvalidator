@@ -1,7 +1,6 @@
 package authorization
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -11,15 +10,13 @@ import (
 )
 
 type Mock struct {
-	Entitlement string // TODO type match
-	Boundaries  []string
+	Claims []string
 }
 
 // e.g. http.HandleFunc("/health-check", HealthCheckHandler)
 func (m *Mock) MockContextHandler(w http.ResponseWriter, r *http.Request) {
 	// inspect context
-	m.Entitlement = fmt.Sprintf("%s", r.Context().Value(ContextEntitlementKey)) // todo proper type assertion with type change
-	m.Boundaries = r.Context().Value(ContextBoundaryKey).([]string)
+	m.Claims = r.Context().Value(ContextBoundaryKey).([]string)
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
@@ -43,6 +40,5 @@ func TestAuthorizationContext(t *testing.T) {
 	// wrap the test handler in the authz middleware
 	a.Authz(handler).ServeHTTP(rr, req)
 
-	assert.Equal(t, "hello world", m.Entitlement)
-	assert.Equal(t, []string{"g1", "g2"}, m.Boundaries)
+	assert.Equal(t, []string{"g1", "g2"}, m.Claims)
 }

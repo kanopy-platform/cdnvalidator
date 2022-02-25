@@ -7,16 +7,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type EntitlementKey string
-type BoundaryKey string
+type ClaimsKey string
 
 const (
-	ContextEntitlementKey EntitlementKey = "entitlement"
-	ContextBoundaryKey    BoundaryKey    = "boundaries"
+	ContextBoundaryKey ClaimsKey = "claims"
 )
 
-type EntitlementGetter interface {
-	GetEntitlements(distrbution string, boundaries ...string) interface{} // todo, grab correct type from config
+type Entitler interface {
+	Entitled(req http.Request, claims []string) bool
 }
 
 type Authorizer interface {
@@ -24,7 +22,7 @@ type Authorizer interface {
 }
 
 type Middleware struct {
-	entitlement EntitlementGetter
+	entitlementManager Entitler
 }
 
 func New(opts ...Option) *Middleware {
@@ -37,13 +35,8 @@ func New(opts ...Option) *Middleware {
 	return m
 }
 
-// TODO swap entitlement interface{} for type
-func (m *Middleware) addEntitlement(ctx context.Context, entitlement interface{}) context.Context {
-	return context.WithValue(ctx, ContextEntitlementKey, entitlement)
-}
-
-func (m *Middleware) addBoundaries(ctx context.Context, boundaries []string) context.Context {
-	return context.WithValue(ctx, ContextBoundaryKey, boundaries)
+func (m *Middleware) addClaims(ctx context.Context, claims []string) context.Context {
+	return context.WithValue(ctx, ContextBoundaryKey, claims)
 }
 
 func (m *Middleware) Authz(next http.Handler) http.Handler {
@@ -51,13 +44,12 @@ func (m *Middleware) Authz(next http.Handler) http.Handler {
 		// process entitlement logic
 		log.Info("authz middleware")
 
-		boundaries := []string{"g1", "g2"}
+		claims := []string{"g1", "g2"}
 		// todo parse JWT
 
 		// add information to context
-		entitlement := "hello world" // todo swap out for type
-		req = req.WithContext(m.addEntitlement(req.Context(), entitlement))
-		req = req.WithContext(m.addBoundaries(req.Context(), boundaries))
+
+		req = req.WithContext(m.addClaims(req.Context(), claims))
 
 		next.ServeHTTP(w, req)
 	})

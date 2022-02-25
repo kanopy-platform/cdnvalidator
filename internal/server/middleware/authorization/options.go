@@ -2,8 +2,8 @@ package authorization
 
 type Option func(m *Middleware)
 
-func WithEntitlements(e EntitlementGetter) Option {
+func WithEntitlements(e Entitler) Option {
 	return func(m *Middleware) {
-		m.entitlement = e
+		m.entitlementManager = e
 	}
 }
