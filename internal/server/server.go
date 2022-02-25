@@ -33,8 +33,7 @@ func New(opts ...Option) (http.Handler, error) {
 	authmiddleware := authorization.New(authorization.WithCookieName(s.authCookieName),
 		authorization.WithAuthorizationHeader()) // TODO add with entitlements option
 
-	apiv1beta1 := v1beta1.New()
-	s.router.Handle(apiv1beta1.PathPrefix(), authmiddleware(apiv1beta1.Handler()))
+	s.router.Handle(v1beta1.PathPrefix, authmiddleware(v1beta1.New()))
 
 	return logRequestHandler(s.router), nil
 }
