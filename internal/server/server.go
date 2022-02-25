@@ -28,11 +28,7 @@ func New(opts ...Option) (http.Handler, error) {
 	s.router.HandleFunc("/", s.handleRoot())
 	s.router.HandleFunc("/healthz", s.handleHealthz())
 
-	/* TODO enable authz middleware on routes.
-	a := authorization.New(authorization.WithCookieName(s.authCookieName),
-		authorization.WithAuthorizationHeader()) // TODO add with entitlements option
-	v1beta1.New().RegisterRoutes(a, s.router)
-	*/
+	// TODO enable authz middleware on routes.
 
 	return logRequestHandler(s.router), nil
 }

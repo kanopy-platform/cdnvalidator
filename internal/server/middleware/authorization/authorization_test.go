@@ -50,13 +50,13 @@ func TestAuthorizationContext(t *testing.T) {
 
 	m := &Mock{}
 
-	a := New(WithAuthorizationHeader())
+	middleware := New(WithAuthorizationHeader())
 
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(m.MockContextHandler)
 
 	// wrap the test handler in the authz middleware
-	a.Handler(handler).ServeHTTP(rr, req)
+	middleware(handler).ServeHTTP(rr, req)
 
 	assert.Equal(t, []string{"g1", "g2"}, m.Claims)
 }
@@ -77,7 +77,7 @@ func TestAuthorizationResponses(t *testing.T) {
 	entitler := &Mock{}
 
 	tests := []struct {
-		middleware *Middleware
+		middleware func(http.Handler) http.Handler
 		token      string
 		want       int
 	}{
@@ -135,7 +135,7 @@ func TestAuthorizationResponses(t *testing.T) {
 		handler := http.HandlerFunc(m.MockContextHandler)
 
 		// wrap the test handler in the authz middleware
-		test.middleware.Handler(handler).ServeHTTP(rr, req)
+		test.middleware(handler).ServeHTTP(rr, req)
 		assert.Equal(t, test.want, rr.Result().StatusCode)
 	}
 }
