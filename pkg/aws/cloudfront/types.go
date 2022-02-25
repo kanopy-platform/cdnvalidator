@@ -1,16 +1,24 @@
 package cloudfront
 
 import (
+	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudfront/cloudfrontiface"
+	"github.com/aws/aws-sdk-go-v2/config"
+	cf "github.com/aws/aws-sdk-go-v2/service/cloudfront"
 )
 
+// Defines the set of APIs from aws-sdk-go-v2/service/cloudfront required
+// This abstraction allows mocking these methods in _test.go
+type cfClientAPI interface {
+	CreateInvalidation(ctx context.Context, params *cf.CreateInvalidationInput, optFns ...func(*cf.Options)) (*cf.CreateInvalidationOutput, error)
+	GetInvalidation(ctx context.Context, params *cf.GetInvalidationInput, optFns ...func(*cf.Options)) (*cf.GetInvalidationOutput, error)
+}
+
 type Client struct {
-	cfApi   cloudfrontiface.CloudFrontAPI
-	awsCfg  *aws.Config
-	timeout time.Duration
+	cfClient      cfClientAPI
+	awsCfgOptions []func(*config.LoadOptions) error
+	timeout       time.Duration
 }
 
 type CreateInvalidationOutput struct {

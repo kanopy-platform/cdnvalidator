@@ -24,6 +24,8 @@ func NewRootCommand() *cobra.Command {
 	cmd.PersistentFlags().String("log-level", "info", "Configure log level")
 	cmd.PersistentFlags().String("listen-address", ":8080", "Server listen address")
 
+	cmd.AddCommand(newCfTestCommand())
+
 	return cmd
 }
 

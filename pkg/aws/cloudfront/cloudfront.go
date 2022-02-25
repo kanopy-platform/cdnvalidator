@@ -5,29 +5,35 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	cf "github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	cf "github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 )
 
-func NewClient(opts ...Option) (*Client, error) {
-	client := &Client{
-		awsCfg:  &aws.Config{},
-		timeout: 30 * time.Second,
+func New(opts ...Option) (*Client, error) {
+	client := &Client{}
+
+	// default options
+	o := []Option{
+		WithAwsRegion("us-east-1"),
+		WithTimeout(30 * time.Second),
 	}
+
+	opts = append(o, opts...)
 
 	for _, opt := range opts {
 		opt(client)
 	}
 
-	// By default, if no StaticCredentials are provided, NewSession will use environment variables
+	// By default, if no StaticCredentials are provided, LoadDefaultConfig will use environment variables
 	// AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN
-	session, err := session.NewSession(client.awsCfg)
+	cfg, err := config.LoadDefaultConfig(context.Background(), client.awsCfgOptions...)
 	if err != nil {
 		return nil, err
 	}
 
-	client.cfApi = cf.New(session)
+	client.cfClient = cf.NewFromConfig(cfg)
 
 	return client, nil
 }
@@ -41,57 +47,44 @@ func currentTimeSeconds() string {
 }
 
 // Verifies the Invalidation struct's pointers are non-nil
-func checkInvalidationStruct(invalidation *cf.Invalidation) error {
+func checkInvalidationStruct(invalidation *types.Invalidation) error {
 	if invalidation == nil {
-		return fmt.Errorf("cloudfront Invalidation struct set to nil")
+		return fmt.Errorf("invalidation nil pointer")
 	}
 
-	if invalidation.CreateTime == nil {
-		return fmt.Errorf("cloudfront Invalidation.CreateTime set to nil")
+	fieldNilError := fmt.Errorf("invalidation struct contains a nil field")
+
+	if invalidation.CreateTime == nil ||
+		invalidation.Id == nil ||
+		invalidation.InvalidationBatch == nil ||
+		invalidation.Status == nil {
+		return fieldNilError
 	}
 
-	if invalidation.Id == nil {
-		return fmt.Errorf("cloudfront Invalidation.Id set to nil")
-	}
-
-	if invalidation.InvalidationBatch == nil {
-		return fmt.Errorf("cloudfront Invalidation.InvalidationBatch set to nil")
-	}
-
-	if invalidation.InvalidationBatch.CallerReference == nil {
-		return fmt.Errorf("cloudfront Invalidation.InvalidationBatch.CallerReference set to nil")
-	}
-
-	if invalidation.InvalidationBatch.Paths == nil {
-		return fmt.Errorf("cloudfront Invalidation.InvalidationBatch.Paths set to nil")
-	}
-
-	if invalidation.InvalidationBatch.Paths.Items == nil {
-		return fmt.Errorf("cloudfront Invalidation.InvalidationBatch.Paths.Items set to nil")
-	}
-
-	if invalidation.Status == nil {
-		return fmt.Errorf("cloudfront Invalidation.Status set to nil")
+	if invalidation.InvalidationBatch.CallerReference == nil ||
+		invalidation.InvalidationBatch.Paths == nil ||
+		invalidation.InvalidationBatch.Paths.Quantity == nil {
+		return fieldNilError
 	}
 
 	return nil
 }
 
 // Creates an Invalidation request
-func (c *Client) CreateInvalidation(distributionId string, paths []string) (*CreateInvalidationOutput, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
+func (c *Client) CreateInvalidation(ctx context.Context, distributionId string, paths []string) (*CreateInvalidationOutput, error) {
+	ctx, cancel := context.WithTimeout(ctx, c.timeout)
 	defer cancel()
 
-	output, err := c.cfApi.CreateInvalidationWithContext(ctx, &cf.CreateInvalidationInput{
+	output, err := c.cfClient.CreateInvalidation(ctx, &cf.CreateInvalidationInput{
 		DistributionId: aws.String(distributionId),
-		InvalidationBatch: &cf.InvalidationBatch{
+		InvalidationBatch: &types.InvalidationBatch{
 			// Using CallerReference as unique identifier for Invalidation request.
 			// Effectively rate limits CreateInvalidation requests for the same (Distribution_Id, Paths)
 			// to once per second.
 			CallerReference: aws.String(currentTimeSeconds()),
-			Paths: &cf.Paths{
-				Items:    aws.StringSlice(paths),
-				Quantity: aws.Int64(int64(len(paths))),
+			Paths: &types.Paths{
+				Items:    paths,
+				Quantity: aws.Int32(int32(len(paths))),
 			},
 		},
 	})
@@ -105,19 +98,19 @@ func (c *Client) CreateInvalidation(distributionId string, paths []string) (*Cre
 	invalidation := *output.Invalidation
 
 	response := &CreateInvalidationOutput{
-		InvalidationId: aws.StringValue(invalidation.Id),
-		Status:         aws.StringValue(invalidation.Status),
+		InvalidationId: aws.ToString(invalidation.Id),
+		Status:         aws.ToString(invalidation.Status),
 	}
 
 	return response, nil
 }
 
 // Retrieves information about the given invalidation request
-func (c *Client) GetInvalidation(distributionId string, invalidationId string) (*GetInvalidationOutput, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
+func (c *Client) GetInvalidation(ctx context.Context, distributionId string, invalidationId string) (*GetInvalidationOutput, error) {
+	ctx, cancel := context.WithTimeout(ctx, c.timeout)
 	defer cancel()
 
-	output, err := c.cfApi.GetInvalidationWithContext(ctx, &cf.GetInvalidationInput{
+	output, err := c.cfClient.GetInvalidation(ctx, &cf.GetInvalidationInput{
 		DistributionId: aws.String(distributionId),
 		Id:             aws.String(invalidationId),
 	})
@@ -131,9 +124,9 @@ func (c *Client) GetInvalidation(distributionId string, invalidationId string) (
 	invalidation := *output.Invalidation
 
 	response := &GetInvalidationOutput{
-		CreateTime: aws.TimeValue(invalidation.CreateTime),
-		Status:     aws.StringValue(invalidation.Status),
-		Paths:      aws.StringValueSlice(invalidation.InvalidationBatch.Paths.Items),
+		CreateTime: aws.ToTime(invalidation.CreateTime),
+		Status:     aws.ToString(invalidation.Status),
+		Paths:      invalidation.InvalidationBatch.Paths.Items,
 	}
 
 	return response, nil

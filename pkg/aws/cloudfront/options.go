@@ -3,14 +3,21 @@ package cloudfront
 import (
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 )
 
 type Option func(c *Client)
 
-func WithStaticCredentials(id string, secret string, token string) Option {
+func WithAwsRegion(region string) Option {
 	return func(c *Client) {
-		c.awsCfg.Credentials = credentials.NewStaticCredentials(id, secret, token)
+		c.awsCfgOptions = append(c.awsCfgOptions, config.WithRegion(region))
+	}
+}
+
+func WithStaticCredentials(key string, secret string) Option {
+	return func(c *Client) {
+		c.awsCfgOptions = append(c.awsCfgOptions, config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(key, secret, "")))
 	}
 }
 

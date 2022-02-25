@@ -1,19 +1,18 @@
 package cloudfront
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/request"
-	cf "github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/aws/aws-sdk-go/service/cloudfront/cloudfrontiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	cf "github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/stretchr/testify/assert"
 )
 
 type mockCloudFrontClient struct {
-	cloudfrontiface.CloudFrontAPI
 	returnError     bool
 	createTime      time.Time
 	paths           []string
@@ -23,20 +22,20 @@ type mockCloudFrontClient struct {
 	status          string
 }
 
-func (m *mockCloudFrontClient) CreateInvalidationWithContext(aws.Context, *cf.CreateInvalidationInput, ...request.Option) (*cf.CreateInvalidationOutput, error) {
+func (m *mockCloudFrontClient) CreateInvalidation(ctx context.Context, params *cf.CreateInvalidationInput, optFns ...func(*cf.Options)) (*cf.CreateInvalidationOutput, error) {
 	if m.returnError {
 		return nil, fmt.Errorf("mock cloudfront error")
 	}
 
 	output := &cf.CreateInvalidationOutput{
-		Invalidation: &cf.Invalidation{
+		Invalidation: &types.Invalidation{
 			CreateTime: aws.Time(m.createTime),
 			Id:         aws.String(m.invalidationId),
-			InvalidationBatch: &cf.InvalidationBatch{
+			InvalidationBatch: &types.InvalidationBatch{
 				CallerReference: aws.String(m.callerReference),
-				Paths: &cf.Paths{
-					Items:    aws.StringSlice(m.paths),
-					Quantity: aws.Int64(int64(len(m.paths))),
+				Paths: &types.Paths{
+					Items:    m.paths,
+					Quantity: aws.Int32(int32(len(m.paths))),
 				},
 			},
 			Status: aws.String(m.status),
@@ -47,20 +46,20 @@ func (m *mockCloudFrontClient) CreateInvalidationWithContext(aws.Context, *cf.Cr
 	return output, nil
 }
 
-func (m *mockCloudFrontClient) GetInvalidationWithContext(aws.Context, *cf.GetInvalidationInput, ...request.Option) (*cf.GetInvalidationOutput, error) {
+func (m *mockCloudFrontClient) GetInvalidation(ctx context.Context, params *cf.GetInvalidationInput, optFns ...func(*cf.Options)) (*cf.GetInvalidationOutput, error) {
 	if m.returnError {
 		return nil, fmt.Errorf("mock cloudfront error")
 	}
 
 	output := &cf.GetInvalidationOutput{
-		Invalidation: &cf.Invalidation{
+		Invalidation: &types.Invalidation{
 			CreateTime: aws.Time(m.createTime),
 			Id:         aws.String(m.invalidationId),
-			InvalidationBatch: &cf.InvalidationBatch{
+			InvalidationBatch: &types.InvalidationBatch{
 				CallerReference: aws.String(m.callerReference),
-				Paths: &cf.Paths{
-					Items:    aws.StringSlice(m.paths),
-					Quantity: aws.Int64(int64(len(m.paths))),
+				Paths: &types.Paths{
+					Items:    m.paths,
+					Quantity: aws.Int32(int32(len(m.paths))),
 				},
 			},
 			Status: aws.String(m.status),
@@ -70,9 +69,9 @@ func (m *mockCloudFrontClient) GetInvalidationWithContext(aws.Context, *cf.GetIn
 	return output, nil
 }
 
-func newMockClient(cfClient cloudfrontiface.CloudFrontAPI) *Client {
+func newMockClient(cfClient cfClientAPI) *Client {
 	return &Client{
-		cfApi: cfClient,
+		cfClient: cfClient,
 	}
 }
 
@@ -99,7 +98,7 @@ func TestCreateInvalidation(t *testing.T) {
 	for _, test := range tests {
 		client := newMockClient(test)
 
-		output, err := client.CreateInvalidation(test.distributionId, test.paths)
+		output, err := client.CreateInvalidation(context.Background(), test.distributionId, test.paths)
 		if test.returnError {
 			assert.Error(t, err)
 		} else {
@@ -132,7 +131,7 @@ func TestGetInvalidation(t *testing.T) {
 	for _, test := range tests {
 		client := newMockClient(test)
 
-		output, err := client.GetInvalidation(test.distributionId, test.invalidationId)
+		output, err := client.GetInvalidation(context.Background(), test.distributionId, test.invalidationId)
 		if test.returnError {
 			assert.Error(t, err)
 		} else {
