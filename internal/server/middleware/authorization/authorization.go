@@ -20,31 +20,27 @@ type Entitler interface {
 	Entitled(req *http.Request, claims []string) bool
 }
 
-type Authorizer interface {
-	Authz(next http.Handler) http.Handler
-}
-
-type Middleware struct {
+type middleware struct {
 	entitlementManager Entitler
 	authCookieName     string
 	authHeaderEnabled  bool
 }
 
-func New(opts ...Option) *Middleware {
-	m := &Middleware{}
+func New(opts ...Option) func(http.Handler) http.Handler {
+	m := &middleware{}
 
 	for _, opt := range opts {
 		opt(m)
 	}
 
-	return m
+	return m.handler
 }
 
-func (m *Middleware) addClaims(ctx context.Context, claims []string) context.Context {
+func (m *middleware) addClaims(ctx context.Context, claims []string) context.Context {
 	return context.WithValue(ctx, ContextBoundaryKey, claims)
 }
 
-func (m *Middleware) getAuthorizationToken(req *http.Request) (string, error) {
+func (m *middleware) getAuthorizationToken(req *http.Request) (string, error) {
 	if m.authHeaderEnabled {
 		if _, ok := req.Header["Authorization"]; ok {
 			v := req.Header.Get("Authorization")
@@ -68,7 +64,7 @@ func (m *Middleware) getAuthorizationToken(req *http.Request) (string, error) {
 	return v.Value, nil
 }
 
-func (m *Middleware) Authz(next http.Handler) http.Handler {
+func (m *middleware) handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		// process entitlement logic
 

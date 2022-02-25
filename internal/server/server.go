@@ -30,11 +30,11 @@ func New(opts ...Option) (http.Handler, error) {
 	s.router.HandleFunc("/", s.handleRoot())
 	s.router.HandleFunc("/healthz", s.handleHealthz())
 
-	a := authorization.New(authorization.WithCookieName(s.authCookieName),
+	authmiddleware := authorization.New(authorization.WithCookieName(s.authCookieName),
 		authorization.WithAuthorizationHeader()) // TODO add with entitlements option
 
 	apiv1beta1 := v1beta1.New()
-	s.router.Handle(apiv1beta1.PathPrefix(), a.Authz(apiv1beta1.Handler()))
+	s.router.Handle(apiv1beta1.PathPrefix(), authmiddleware(apiv1beta1.Handler()))
 
 	return logRequestHandler(s.router), nil
 }
