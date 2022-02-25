@@ -53,5 +53,10 @@ func (c *RootCommand) runE(cmd *cobra.Command, args []string) error {
 
 	log.Printf("Starting server on %s\n", addr)
 
-	return http.ListenAndServe(addr, server.New())
+	s, err := server.New()
+	if err != nil {
+		return err
+	}
+
+	return http.ListenAndServe(addr, s)
 }

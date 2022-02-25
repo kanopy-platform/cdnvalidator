@@ -13,7 +13,11 @@ import (
 var testHandler http.Handler
 
 func TestMain(m *testing.M) {
-	testHandler = New()
+	var err error
+	testHandler, err = New()
+	if err != nil {
+		os.Exit(1)
+	}
 	os.Exit(m.Run())
 }
 

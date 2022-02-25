@@ -7,3 +7,15 @@ func WithEntitlements(e Entitler) Option {
 		m.entitlementManager = e
 	}
 }
+
+func WithCookieName(name string) Option {
+	return func(m *Middleware) {
+		m.authCookieName = name
+	}
+}
+
+func WithAuthorizationHeader() Option {
+	return func(m *Middleware) {
+		m.authHeaderEnabled = true
+	}
+}
