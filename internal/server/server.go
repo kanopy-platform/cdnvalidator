@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/felixge/httpsnoop"
+	"github.com/kanopy-platform/cdnvalidator/internal/server/api/v1beta1"
+	"github.com/kanopy-platform/cdnvalidator/internal/server/middleware/authorization"
 )
 
 type Server struct {
@@ -28,11 +30,11 @@ func New(opts ...Option) (http.Handler, error) {
 	s.router.HandleFunc("/", s.handleRoot())
 	s.router.HandleFunc("/healthz", s.handleHealthz())
 
-	/* TODO enable authz middleware on routes.
 	a := authorization.New(authorization.WithCookieName(s.authCookieName),
 		authorization.WithAuthorizationHeader()) // TODO add with entitlements option
-	v1beta1.New().RegisterRoutes(a, s.router)
-	*/
+
+	apiv1beta1 := v1beta1.New()
+	s.router.Handle(apiv1beta1.PathPrefix(), a.Authz(apiv1beta1.Handler()))
 
 	return logRequestHandler(s.router), nil
 }
