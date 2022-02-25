@@ -27,51 +27,56 @@ func TestGetEntitlements(t *testing.T) {
 				Prefix:         "/",
 			},
 			"vn2": Entitlement{
-				DistributionID: "d1",
+				DistributionID: "d2",
 				Prefix:         "/",
 			},
 		},
 	}
 
 	tests := []struct {
-		boundaries []string
-		want       []Entitlement
+		distribution string
+		boundaries   []string
+		want         []Entitlement
 	}{
 		{
-			boundaries: []string{"grp1", "grp2"},
-			want: []Entitlement{
-				c.VanityDistrbutions["vn1"],
-				c.VanityDistrbutions["vn2"],
-			},
-		},
-		{
-			boundaries: []string{"grp2"},
+			distribution: "vn1",
+			boundaries:   []string{"grp1", "grp2"},
 			want: []Entitlement{
 				c.VanityDistrbutions["vn1"],
 			},
 		},
 		{
-			boundaries: []string{"grp1"},
+			distribution: "vn1",
+			boundaries:   []string{"grp2"},
 			want: []Entitlement{
 				c.VanityDistrbutions["vn1"],
+			},
+		},
+
+		{
+			distribution: "vn1",
+			boundaries:   []string{"grp1"},
+			want: []Entitlement{
+				c.VanityDistrbutions["vn1"],
+			},
+		},
+
+		{
+			distribution: "vn2",
+			boundaries:   []string{"grp3"},
+			want: []Entitlement{
 				c.VanityDistrbutions["vn2"],
 			},
 		},
 
 		{
-			boundaries: []string{"grp3"},
-			want: []Entitlement{
-				c.VanityDistrbutions["vn2"],
-			},
-		},
-
-		{
-			boundaries: []string{"not-exists"},
-			want:       []Entitlement{},
+			distribution: "vn2",
+			boundaries:   []string{"not-exists"},
+			want:         []Entitlement{},
 		},
 	}
 
 	for _, test := range tests {
-		assert.Equal(t, c.GetEntitlements(test.boundaries...), test.want)
+		assert.Equal(t, test.want, c.GetEntitlements(test.distribution, test.boundaries...))
 	}
 }

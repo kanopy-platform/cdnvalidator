@@ -5,7 +5,7 @@ type Entitlement struct {
 	Prefix         string `json:"prefix"`
 }
 
-type VanityDistrbution map[string]Entitlement
+type VanityDistrbution map[VanityDistrbutionName]Entitlement
 
 type VanityDistrbutionName string
 
