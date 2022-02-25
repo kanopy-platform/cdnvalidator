@@ -20,10 +20,6 @@ type Entitler interface {
 	Entitled(req *http.Request, claims []string) bool
 }
 
-type Authorizer interface {
-	Authz(next http.Handler) http.Handler
-}
-
 type Middleware struct {
 	entitlementManager Entitler
 	authCookieName     string
@@ -68,7 +64,7 @@ func (m *Middleware) getAuthorizationToken(req *http.Request) (string, error) {
 	return v.Value, nil
 }
 
-func (m *Middleware) Authz(next http.Handler) http.Handler {
+func (m *Middleware) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		// process entitlement logic
 
