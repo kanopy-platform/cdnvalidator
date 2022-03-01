@@ -1,13 +1,21 @@
 GO_MODULE := $(shell git config --get remote.origin.url | grep -o 'github\.com[:/][^.]*' | tr ':' '/')
 CMD_NAME := $(shell basename ${GO_MODULE})
 DEFAULT_APP_PORT ?= 8080
+ENV_VARIABLES := -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN # ENV to pass into container
 
 RUN ?= .*
 PKG ?= ./...
 .PHONY: test
 test: ## Run tests in local environment
 	golangci-lint run --timeout=5m $(PKG)
-	go test -cover -run=$(RUN) $(PKG)
+	go test -short -cover -run=$(RUN) $(PKG)
+
+.PHONY: test-integration
+test-integration: ## Run integration tests
+# Need to pass in args. Example:
+# make test-integration DISTRIBUTION="<distribution>" PATHS="<comma separated paths>"
+# make test-integration DISTRIBUTION="<distribution>" PATHS="<comma separated paths>" ACCESS_ID="<aws id>" ACCESS_SECRET="<aws secret>"
+	go test -run=Integration -v ./.../cloudfront -args -distribution=$(DISTRIBUTION) -paths=$(PATHS) -access-id=$(ACCESS_ID) -access-secret=$(ACCESS_SECRET)
 
 .PHONY: docker-build-test
 docker-build-test: ## Build local development docker image with cached go modules, builds, and tests
@@ -27,7 +35,7 @@ docker:
 
 .PHONY: docker-run
 docker-run: docker ## Build and run the application in a local docker container
-	@docker run -p ${DEFAULT_APP_PORT}:${DEFAULT_APP_PORT} $(CMD_NAME):latest
+	@docker run -p ${DEFAULT_APP_PORT}:${DEFAULT_APP_PORT} ${ENV_VARIABLES} $(CMD_NAME):latest
 
 .PHONY: help
 help:
