@@ -10,6 +10,7 @@ import (
 
 	"github.com/felixge/httpsnoop"
 	"github.com/gorilla/mux"
+	"github.com/kanopy-platform/cdnvalidator/internal/core"
 	"github.com/kanopy-platform/cdnvalidator/internal/server/api/v1beta1"
 	"github.com/kanopy-platform/cdnvalidator/internal/server/middleware/authorization"
 )
@@ -42,8 +43,9 @@ func New(opts ...Option) (http.Handler, error) {
 	authmiddleware := authorization.New(authorization.WithCookieName(s.authCookieName),
 		authorization.WithAuthorizationHeader())
 
-	var config interface{}
-	api := v1beta1.New(s.router, config)
+	fake := core.NewFake()
+
+	api := v1beta1.New(s.router, fake)
 	api.Use(authmiddleware)
 
 	return s.router, nil
