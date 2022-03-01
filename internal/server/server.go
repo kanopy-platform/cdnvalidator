@@ -42,7 +42,8 @@ func New(opts ...Option) (http.Handler, error) {
 	authmiddleware := authorization.New(authorization.WithCookieName(s.authCookieName),
 		authorization.WithAuthorizationHeader())
 
-	api := v1beta1.New(s.router)
+	var config interface{}
+	api := v1beta1.New(s.router, config)
 	api.Use(authmiddleware)
 
 	return s.router, nil
@@ -60,14 +61,12 @@ func (s *Server) handleHealthz() http.HandlerFunc {
 			"status": "ok",
 		}
 
-		bytes, err := json.Marshal(status)
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(status)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
-
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprint(w, string(bytes))
 	}
 }
 
