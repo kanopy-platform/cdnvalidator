@@ -30,6 +30,12 @@ func New(opts ...Option) (http.Handler, error) {
 
 	s.router.Use(logRequestHandler)
 
+	for _, opt := range opts {
+		if err := opt(s); err != nil {
+			return nil, err
+		}
+	}
+
 	s.router.HandleFunc("/", s.handleRoot())
 	s.router.HandleFunc("/healthz", s.handleHealthz())
 
