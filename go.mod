@@ -15,4 +15,5 @@ require (
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/text v0.3.6 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0
+	sigs.k8s.io/yaml v1.3.0
 )
