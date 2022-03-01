@@ -6,22 +6,22 @@ import (
 )
 
 func TestEntitled(t *testing.T) {
-	config := Config{
-		Distributions: distributions{
+	config := &Config{
+		Distributions: map[distributionName]Distribution{
 			"vanity0": {
-				id: "12345",
-				prefix: "/",
+				ID: "12345",
+				Prefix: "/",
 			},
 			"vanity1": {
-				id: "12345",
-				prefix: "/foo",
+				ID: "12345",
+				Prefix: "/foo",
 			},
 			"vanity3": {
-				id: "4567",
-				prefix: "/bar",
+				ID: "4567",
+				Prefix: "/bar",
 			},
 		},
-		Entitlements: entitlements{
+		Entitlements: map[claimName][]distributionName{
 			"one": {
 				"vanity1",
 				"vanity2",
@@ -37,9 +37,8 @@ func TestEntitled(t *testing.T) {
 
 	claims := []string{"one", "two"}
 
-	em := NewEntitlementManager(&config)
+	em := NewConfigEntitler(config, "vanity1", "/foo")
 
-	assert.Equal(t, true, em.Entitled("/foo", claims))
-	assert.Equal(t, true, em.Entitled("/bar", claims))
-	assert.Equal(t, false, em.Entitled("/some", claims))
+	assert.Equal(t, true, em.Entitled(claims))
+	assert.Equal(t, true, em.Entitled(claims))
 }

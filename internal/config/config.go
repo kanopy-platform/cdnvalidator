@@ -5,9 +5,17 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+type distributionName = string
+type claimName = string
+
 type Config struct {
-	Distributions distributions `json:"distributions"`
-	Entitlements entitlements `json:"entitlements"`
+	Distributions map[distributionName]Distribution `json:"distributions"`
+	Entitlements  map[claimName][]distributionName  `json:"entitlements"`
+}
+
+type Distribution struct {
+	ID     string `json:"id"`
+	Prefix string `json:"prefix"`
 }
 
 func (c *Config) Load(file string) error {
@@ -24,43 +32,42 @@ func (c *Config) Load(file string) error {
 	return nil
 }
 
-type distributionList = []string
-type entitlements map[string]distributionList
-
-type distributionProperties struct {
-	id string
-	prefix string
+type Entitler interface {
+	Entitled(claims []string) bool
 }
 
-type distributions map[string]distributionProperties
-
-type EntitlementManager struct {
-	entitlements entitlements
-	distributions distributions
+type BaseEntitler struct {
+	distribution string
+	prefix       string
 }
 
-func NewEntitlementManager(config *Config) *EntitlementManager {
-	return &EntitlementManager{
-		entitlements: config.Entitlements,
-		distributions: config.Distributions,
+type ConfigEntitler struct {
+	config *Config
+	BaseEntitler
+}
+
+func NewConfigEntitler(config *Config, distribution, prefix string) *ConfigEntitler {
+	return &ConfigEntitler{
+		config: config,
+		BaseEntitler: BaseEntitler{
+			distribution: distribution,
+			prefix:       prefix,
+		},
 	}
 }
 
-
-// TODO This will most likely receive *http.Request instead of "path" in the future
-func (e *EntitlementManager) Entitled(path string, claims []string) bool {
-
-	var distributions []string
+func (ce *ConfigEntitler) Entitled(claims []string) bool {
 	for _, claim := range claims {
-		if distros, ok := e.entitlements[claim]; ok {
-			distributions = append(distributions, distros...)
-		}
-	}
+		if distros, ok := ce.config.Entitlements[claim]; ok {
+			for _, distro := range distros {
+				if distro == ce.distribution {
+					if distroInfo, ok := ce.config.Distributions[distro]; ok {
+						if distroInfo.Prefix == ce.prefix {
+							return true
+						}
+					}
 
-	for _, distro := range distributions {
-		if distroProps, ok := e.distributions[distro]; ok {
-			if path == distroProps.prefix {
-				return true
+				}
 			}
 		}
 	}
