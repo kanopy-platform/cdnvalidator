@@ -16,14 +16,9 @@ const (
 	ContextBoundaryKey ClaimsKey = "claims"
 )
 
-type Entitler interface {
-	Entitled(req *http.Request, claims []string) bool
-}
-
 type middleware struct {
-	entitlementManager Entitler
-	authCookieName     string
-	authHeaderEnabled  bool
+	authCookieName    string
+	authHeaderEnabled bool
 }
 
 func New(opts ...Option) func(http.Handler) http.Handler {
@@ -83,14 +78,6 @@ func (m *middleware) handler(next http.Handler) http.Handler {
 		}
 
 		claims := append(tokenClaims.Groups, tokenClaims.Scopes...)
-
-		if m.entitlementManager != nil {
-			if !m.entitlementManager.Entitled(req, claims) {
-				log.WithError(err).Error("unauthorized action")
-				http.Error(w, "invalid permissions to perform the requested action", http.StatusForbidden)
-				return
-			}
-		}
 
 		// add information to context
 		req = req.WithContext(m.addClaims(req.Context(), claims))

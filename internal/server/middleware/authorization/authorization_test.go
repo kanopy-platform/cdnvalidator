@@ -24,15 +24,6 @@ func (m *Mock) MockContextHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, `{"retval": "done"}`)
 }
 
-func (m *Mock) Entitled(req *http.Request, claims []string) bool {
-	for _, c := range claims {
-		if c == "yes" {
-			return true
-		}
-	}
-	return false
-}
-
 func TestAuthorizationContext(t *testing.T) {
 	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
 	// pass 'nil' as the third parameter.
@@ -68,14 +59,6 @@ func TestAuthorizationResponses(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	unauthToken, err := jwt.NewTestJWTWithClaims(jwt.Claims{
-		Groups: []string{"g1"},
-		Scopes: []string{"g2"},
-	})
-	assert.NoError(t, err)
-
-	entitler := &Mock{}
-
 	tests := []struct {
 		middleware func(http.Handler) http.Handler
 		token      string
@@ -107,14 +90,8 @@ func TestAuthorizationResponses(t *testing.T) {
 
 		{
 			token:      rawToken,
-			middleware: New(WithAuthorizationHeader(), WithEntitlements(entitler)),
+			middleware: New(WithAuthorizationHeader()),
 			want:       200,
-		},
-
-		{
-			token:      unauthToken,
-			middleware: New(WithAuthorizationHeader(), WithEntitlements(entitler)),
-			want:       403,
 		},
 	}
 
