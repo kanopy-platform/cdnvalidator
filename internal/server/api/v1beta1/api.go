@@ -7,10 +7,11 @@ import (
 const PathPrefix = "/api/v1beta1"
 
 func New(router *mux.Router) *mux.Router {
+	api := router.PathPrefix(PathPrefix).Subrouter()
 
 	// append api handlers here
 
-	return router
+	return api
 }
 
 // define api handler functions here
