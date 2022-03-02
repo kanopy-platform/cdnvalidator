@@ -20,7 +20,7 @@ func addClaims(ctx context.Context, claims []string) context.Context {
 }
 
 func TestGetDistributions(t *testing.T) {
-	fake := NewFake()
+	fake := v1beta1.NewFake()
 
 	tests := []struct {
 		claims []string
@@ -55,7 +55,7 @@ func TestGetDistributions(t *testing.T) {
 }
 
 func TestCreateInvalidation(t *testing.T) {
-	fake := NewFake()
+	fake := v1beta1.NewFake()
 
 	tests := []struct {
 		claims       []string

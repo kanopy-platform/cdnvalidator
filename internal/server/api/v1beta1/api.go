@@ -13,7 +13,8 @@ const ErrUserNotEntitled = "User is not entitled to the CloudFront Invalidation 
 
 const PathPrefix = "/api/v1beta1"
 
-func New(router *mux.Router, ds DistributionService) *mux.Router {
+func New(router *mux.Router) *mux.Router {
+	ds := v1beta1.NewFake()
 	api := router.PathPrefix(PathPrefix).Subrouter()
 
 	// append api handlers here

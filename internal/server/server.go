@@ -42,7 +42,7 @@ func New(opts ...Option) (http.Handler, error) {
 	authmiddleware := authorization.New(authorization.WithCookieName(s.authCookieName),
 		authorization.WithAuthorizationHeader())
 
-	api := v1beta1.New(s.router, v1beta1.NewFake())
+	api := v1beta1.New(s.router)
 	api.Use(authmiddleware)
 
 	return s.router, nil
