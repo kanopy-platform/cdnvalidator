@@ -79,14 +79,14 @@ func TestCreateInvalidation(t *testing.T) {
 		},
 		{
 			claims: []string{"gr1"},
-			name:   "unauthorized path",
+			name:   "unauthorized distribution",
 			body: v1beta1.InvalidationRequest{
 				Paths: []string{"/test/*"},
 			},
 			wantCode: 403,
 			wantResponse: v1beta1.InvalidationResponse{
 				InvalidationMeta: v1beta1.InvalidationMeta{
-					Status: "User is not entitled to invalidate path: /test/*",
+					Status: "User is not entitled to invalidate distribution: unauthorized distribution",
 				},
 			},
 		},

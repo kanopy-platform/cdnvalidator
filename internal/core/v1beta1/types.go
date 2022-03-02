@@ -34,7 +34,7 @@ const (
 
 var (
 	statusCodeReasons = map[int]string{
-		InvalidationUnAuthorizedErrorCode: "User is not entitled to invalidate path: %s",
+		InvalidationUnAuthorizedErrorCode: "User is not entitled to invalidate distribution: %s",
 		DistributionNotFoundErrorCode:     "Distribution not found",
 	}
 )

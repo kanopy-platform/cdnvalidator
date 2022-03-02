@@ -44,8 +44,8 @@ func (f *Fake) CreateInvalidation(ctx context.Context, distributionName string, 
 		return nil, NewInvalidationError(DistributionNotFoundErrorCode, fmt.Errorf("distribution %s not found", distributionName))
 	}
 
-	if distributionName == "unauthorized path" {
-		return nil, NewInvalidationError(InvalidationUnAuthorizedErrorCode, fmt.Errorf("path unauthorized"), paths[0])
+	if distributionName == "unauthorized distribution" {
+		return nil, NewInvalidationError(InvalidationUnAuthorizedErrorCode, fmt.Errorf("distribution unauthorized"), distributionName)
 	}
 
 	return &InvalidationResponse{InvalidationMeta: InvalidationMeta{Status: "OK"}}, nil
