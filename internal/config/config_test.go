@@ -1,27 +1,41 @@
 package config
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-func TestEntitled(t *testing.T) {
-	config := &Config{
-		Distributions: map[distributionName]Distribution{
+type configChange func(config)
+
+func addRepeatedDistribution(originalDistribution string) configChange {
+	return func(c config) {
+		c.Distributions["repeated"] = c.Distributions[originalDistribution]
+	}
+}
+
+func setupConfig(changes ...configChange) *Config {
+
+	config := config{
+		Distributions: Distributions{
 			"dis1": {
-				ID:     "12345",
+				ID:     "123",
 				Prefix: "/foo",
 			},
 			"dis2": {
-				ID:     "12345",
+				ID:     "456",
 				Prefix: "/bar",
 			},
 			"dis3": {
-				ID:     "4567",
+				ID:     "789",
 				Prefix: "/",
 			},
+			"dis4": {
+				ID:     "135",
+				Prefix: "/yay",
+			},
 		},
-		Entitlements: map[claimName][]distributionName{
+		Entitlements: Entitlements{
 			"grp1": {
 				"dis1",
 				"dis2",
@@ -29,49 +43,126 @@ func TestEntitled(t *testing.T) {
 			"grp2": {
 				"dis2",
 			},
+			"grp3": {
+				"dis2",
+				"dis3",
+			},
+			"grp4": {
+				"dis4",
+			},
 		},
 	}
 
+	for _, change := range changes {
+		change(config)
+	}
+
+	return &Config{
+		distributions: config.Distributions,
+		entitlements:  config.Entitlements,
+	}
+}
+
+func TestValidateDistributions(t *testing.T) {
+	config := setupConfig(addRepeatedDistribution("dis1"))
+
+	assert.Error(t, config.validateDistributions())
+}
+
+func TestParse(t *testing.T) {
+	config := &Config{}
+
+	yamlString := `---
+distributions:
+  dis1:
+    id: "123"
+    prefix: "/foo"
+  dis2:
+    id: "456"
+    prefix: "/bar"
+entitlements:
+  grp1:
+    - dis1
+    - dis2
+  grp2:
+    - dis3
+`
+	err := config.parse([]byte(yamlString))
+	assert.NoError(t, err)
+}
+
+func TestClaimDistributions(t *testing.T) {
+	config := setupConfig()
+
 	tests := []struct {
-		name         string
-		distribution string
-		claims       []string
-		prefix       string
-		want         bool
+		claim string
+		want  Distributions
 	}{
 		{
-			name:         "multiple claims in entitlement",
-			distribution: "dis1",
-			claims:       []string{"grp1", "grp2"},
-			prefix:       "/foo",
-			want:         true,
-		},
-		{
-			name:         "one claim in entitlement",
-			distribution: "dis2",
-			claims:       []string{"grp2"},
-			prefix:       "/bar",
-			want:         true,
-		},
-		{
-			name:         "invalid claim in config",
-			distribution: "dis1",
-			claims:       []string{"grp3"},
-			prefix:       "/",
-			want:         false,
-		},
-		{
-			name:         "invalid prefix",
-			distribution: "dis1",
-			claims:       []string{"grp1"},
-			prefix:       "/no-exists",
-			want:         false,
+			claim: "grp1",
+			want: Distributions{
+				"dis1": {
+					ID:     "123",
+					Prefix: "/foo",
+				},
+				"dis2": {
+					ID:     "456",
+					Prefix: "/bar",
+				},
+			},
 		},
 	}
 
 	for _, test := range tests {
-		em := NewConfigEntitler(config, test.distribution, test.prefix)
-		t.Logf("Running test %s", test.name)
-		assert.Equal(t, test.want, em.Entitled(test.claims))
+		assert.Equal(t, test.want, config.claimDistributions(test.claim))
+	}
+}
+
+func TestClaimsDistributions(t *testing.T) {
+	config := setupConfig()
+
+	tests := []struct {
+		claims []string
+		want   Distributions
+	}{
+		{
+			claims: []string{"grp1", "grp3"},
+			want: Distributions{
+				"dis1": {
+					ID:     "123",
+					Prefix: "/foo",
+				},
+				"dis2": {
+					ID:     "456",
+					Prefix: "/bar",
+				},
+				"dis3": {
+					ID:     "789",
+					Prefix: "/",
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		assert.Equal(t, test.want, config.ClaimsDistributions(test.claims))
+	}
+}
+
+func TestClaimsDistributionNames(t *testing.T) {
+	config := setupConfig()
+
+	tests := []struct {
+		claims []string
+		want   []string
+	}{
+		{
+			claims: []string{"grp1", "grp3"},
+			want:   []string{"dis1", "dis2", "dis3"},
+		},
+	}
+
+	for _, test := range tests {
+		assert.Equal(t, test.want, config.ClaimsDistributionNames(test.claims))
 	}
 }
