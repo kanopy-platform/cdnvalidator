@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/kanopy-platform/cdnvalidator/internal/core"
 )
@@ -40,17 +41,43 @@ func (f *Fake) CreateInvalidation(ctx context.Context, distributionName string, 
 		return nil, errors.New("no claims present")
 	}
 
-	if distributionName == "notfound" {
-		return nil, NewInvalidationError(DistributionNotFoundErrorCode, fmt.Errorf("distribution %s not found", distributionName))
-	}
-
-	if distributionName == "unauthorized distribution" {
-		return nil, NewInvalidationError(InvalidationUnAuthorizedErrorCode, fmt.Errorf("distribution unauthorized"), distributionName)
+	if err := checkErrors(distributionName, ""); err != nil {
+		return nil, err
 	}
 
 	return &InvalidationResponse{InvalidationMeta: InvalidationMeta{Status: "OK"}}, nil
 }
 
 func (f *Fake) GetInvalidationStatus(ctx context.Context, distributionName string, invalidationID string) (*InvalidationResponse, error) {
-	return nil, nil
+	claims := core.GetClaims(ctx)
+	if len(claims) == 0 {
+		return nil, errors.New("no claims present")
+	}
+
+	if err := checkErrors(distributionName, invalidationID); err != nil {
+		return nil, err
+	}
+
+	return &InvalidationResponse{
+		ID:               "1",
+		Created:          time.Hour,
+		InvalidationMeta: InvalidationMeta{Status: "Complete"},
+	}, nil
+}
+
+func checkErrors(distributionName, invalidationID string) error {
+	if distributionName == "notfound" {
+		return NewInvalidationError(ResourceNotFoundErrorCode, fmt.Errorf("distribution %s not found", distributionName), distributionName)
+	}
+
+	if distributionName == "unauthorized distribution" {
+		return NewInvalidationError(InvalidationUnAuthorizedErrorCode, fmt.Errorf("distribution unauthorized"), distributionName)
+	}
+
+	if invalidationID == "notfound" {
+		err := fmt.Errorf("mocking AWS Error cloudfront.ErrCodeNoSuchInvalidation")
+		return NewInvalidationError(ResourceNotFoundErrorCode, err, err)
+	}
+
+	return nil
 }

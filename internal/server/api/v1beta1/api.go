@@ -68,7 +68,7 @@ func createInvalidation(ds DistributionService) http.HandlerFunc {
 
 		status, err := ds.CreateInvalidation(r.Context(), name, invalidationReq.Paths)
 		if err != nil {
-			if v1beta1.ErrorDistributionNotFound(err) {
+			if v1beta1.ErrorResourceNotFound(err) {
 				writeJSON(w, err, http.StatusNotFound)
 				return
 			}
@@ -78,7 +78,7 @@ func createInvalidation(ds DistributionService) http.HandlerFunc {
 				return
 			}
 
-			logError(w, err, "unexpected encoding error", http.StatusInternalServerError)
+			logError(w, err, "unexpected error", http.StatusInternalServerError)
 			return
 		}
 
@@ -89,7 +89,28 @@ func createInvalidation(ds DistributionService) http.HandlerFunc {
 // GET Invalidation /api/v1beta/distributions/{name}/invalidations/{id}
 func getInvalidation(ds DistributionService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		vars := mux.Vars(r)
+		name := vars["name"]
+		invalidationID := vars["id"]
 
+		result, err := ds.GetInvalidationStatus(r.Context(), name, invalidationID)
+		if err != nil {
+			if v1beta1.ErrorResourceNotFound(err) {
+				writeJSON(w, err, http.StatusNotFound)
+				return
+			}
+
+			if v1beta1.ErrorIsUnauthorized(err) {
+				writeJSON(w, err, http.StatusForbidden)
+				return
+			}
+			logError(w, err, "unexpected error", http.StatusInternalServerError)
+
+			return
+		}
+
+		writeJSON(w, result, http.StatusOK)
 	}
 }
 

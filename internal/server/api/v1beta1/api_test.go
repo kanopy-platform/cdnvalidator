@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/kanopy-platform/cdnvalidator/internal/core"
@@ -73,7 +74,7 @@ func TestCreateInvalidation(t *testing.T) {
 			wantCode: 404,
 			wantResponse: v1beta1.InvalidationResponse{
 				InvalidationMeta: v1beta1.InvalidationMeta{
-					Status: "Distribution not found",
+					Status: "Resource not found: notfound",
 				},
 			},
 		},
@@ -147,6 +148,85 @@ func TestCreateInvalidation(t *testing.T) {
 			assert.NoError(t, json.Unmarshal(rr.Body.Bytes(), &resp))
 			assert.Equal(t, test.wantResponse, resp)
 		}
+
+	}
+}
+
+func TestGetInvalidation(t *testing.T) {
+	fake := v1beta1.NewFake()
+
+	tests := []struct {
+		name      string
+		invalidID string
+
+		wantCode     int
+		wantResponse v1beta1.InvalidationResponse
+	}{
+		{
+			name:      "notfound",
+			invalidID: "id",
+			wantCode:  404,
+			wantResponse: v1beta1.InvalidationResponse{
+				InvalidationMeta: v1beta1.InvalidationMeta{
+					Status: "Resource not found: notfound",
+				},
+			},
+		},
+
+		{
+			name:      "unauthorized distribution",
+			invalidID: "id",
+			wantCode:  403,
+			wantResponse: v1beta1.InvalidationResponse{
+				InvalidationMeta: v1beta1.InvalidationMeta{
+					Status: "User is not entitled to invalidate distribution: unauthorized distribution",
+				},
+			},
+		},
+
+		{
+			name:      "d1",
+			invalidID: "id",
+			wantCode:  200,
+			wantResponse: v1beta1.InvalidationResponse{
+				Created: time.Hour,
+				ID:      "1",
+				InvalidationMeta: v1beta1.InvalidationMeta{
+					Status: "Complete",
+				},
+			},
+		},
+
+		{
+			name:      "d1",
+			invalidID: "notfound",
+			wantCode:  404,
+			wantResponse: v1beta1.InvalidationResponse{
+				InvalidationMeta: v1beta1.InvalidationMeta{
+					Status: "Resource not found: mocking AWS Error cloudfront.ErrCodeNoSuchInvalidation",
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		req, err := http.NewRequest("GET", fmt.Sprintf("/distributions/%s/invalidations/%s", test.name, test.invalidID), nil)
+		req = mux.SetURLVars(req, map[string]string{
+			"name": test.name,
+			"id":   test.invalidID,
+		})
+		req = req.WithContext(addClaims(req.Context(), []string{"test"}))
+		assert.NoError(t, err)
+
+		rr := httptest.NewRecorder()
+		handler := http.HandlerFunc(getInvalidation(fake))
+		handler.ServeHTTP(rr, req)
+
+		assert.Equal(t, test.wantCode, rr.Code)
+
+		resp := v1beta1.InvalidationResponse{}
+		assert.NoError(t, json.Unmarshal(rr.Body.Bytes(), &resp))
+		assert.Equal(t, test.wantResponse, resp)
 
 	}
 }

@@ -19,6 +19,7 @@ type InvalidationMeta struct {
 
 type InvalidationResponse struct {
 	InvalidationMeta
+	ID      string        `json:"id,omitempty"`
 	Created time.Duration `json:"createTime"`
 	Paths   []string      `json:"paths,omitempty"`
 }
@@ -28,14 +29,14 @@ type InvalidationRequest struct {
 }
 
 const (
-	DistributionNotFoundErrorCode     = 404
+	ResourceNotFoundErrorCode         = 404
 	InvalidationUnAuthorizedErrorCode = 403
 )
 
 var (
 	statusCodeReasons = map[int]string{
 		InvalidationUnAuthorizedErrorCode: "User is not entitled to invalidate distribution: %s",
-		DistributionNotFoundErrorCode:     "Distribution not found",
+		ResourceNotFoundErrorCode:         "Resource not found: %s",
 	}
 )
 
@@ -72,16 +73,16 @@ func ErrorIsUnauthorized(err error) bool {
 		return false
 	}
 
-	return ierr.Code == 403
+	return ierr.Code == InvalidationUnAuthorizedErrorCode
 }
 
-func ErrorDistributionNotFound(err error) bool {
+func ErrorResourceNotFound(err error) bool {
 	var ierr InvalidationError
 	if !errors.As(err, &ierr) {
 		return false
 	}
 
-	return ierr.Code == 404
+	return ierr.Code == ResourceNotFoundErrorCode
 }
 
 //TODO this package will implement the api/v1beta1/DistributionService interface
