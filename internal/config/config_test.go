@@ -1,44 +1,77 @@
 package config
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestEntitled(t *testing.T) {
 	config := &Config{
 		Distributions: map[distributionName]Distribution{
-			"vanity0": {
-				ID: "12345",
-				Prefix: "/",
-			},
-			"vanity1": {
-				ID: "12345",
+			"dis1": {
+				ID:     "12345",
 				Prefix: "/foo",
 			},
-			"vanity3": {
-				ID: "4567",
+			"dis2": {
+				ID:     "12345",
 				Prefix: "/bar",
+			},
+			"dis3": {
+				ID:     "4567",
+				Prefix: "/",
 			},
 		},
 		Entitlements: map[claimName][]distributionName{
-			"one": {
-				"vanity1",
-				"vanity2",
+			"grp1": {
+				"dis1",
+				"dis2",
 			},
-			"two": {
-				"vanity3",
-			},
-			"three": {
-				"vanity4",
+			"grp2": {
+				"dis2",
 			},
 		},
 	}
 
-	claims := []string{"one", "two"}
+	tests := []struct {
+		name         string
+		distribution string
+		claims       []string
+		prefix       string
+		want         bool
+	}{
+		{
+			name:         "multiple claims in entitlement",
+			distribution: "dis1",
+			claims:       []string{"grp1", "grp2"},
+			prefix:       "/foo",
+			want:         true,
+		},
+		{
+			name:         "one claim in entitlement",
+			distribution: "dis2",
+			claims:       []string{"grp2"},
+			prefix:       "/bar",
+			want:         true,
+		},
+		{
+			name:         "invalid claim in config",
+			distribution: "dis1",
+			claims:       []string{"grp3"},
+			prefix:       "/",
+			want:         false,
+		},
+		{
+			name:         "invalid prefix",
+			distribution: "dis1",
+			claims:       []string{"grp1"},
+			prefix:       "/no-exists",
+			want:         false,
+		},
+	}
 
-	em := NewConfigEntitler(config, "vanity1", "/foo")
-
-	assert.Equal(t, true, em.Entitled(claims))
-	assert.Equal(t, true, em.Entitled(claims))
+	for _, test := range tests {
+		em := NewConfigEntitler(config, test.distribution, test.prefix)
+		t.Logf("Running test %s", test.name)
+		assert.Equal(t, test.want, em.Entitled(test.claims))
+	}
 }
