@@ -9,15 +9,26 @@ import (
 	"time"
 
 	"github.com/felixge/httpsnoop"
+	"github.com/gorilla/mux"
+	"github.com/kanopy-platform/cdnvalidator/internal/server/api/v1beta1"
+	"github.com/kanopy-platform/cdnvalidator/internal/server/middleware/authorization"
 )
 
 type Server struct {
-	router         *http.ServeMux
+	router         *mux.Router
 	authCookieName string
 }
 
 func New(opts ...Option) (http.Handler, error) {
-	s := &Server{router: http.NewServeMux()}
+	s := &Server{router: mux.NewRouter()}
+
+	for _, opt := range opts {
+		if err := opt(s); err != nil {
+			return nil, err
+		}
+	}
+
+	s.router.Use(logRequestHandler)
 
 	for _, opt := range opts {
 		if err := opt(s); err != nil {
@@ -28,9 +39,13 @@ func New(opts ...Option) (http.Handler, error) {
 	s.router.HandleFunc("/", s.handleRoot())
 	s.router.HandleFunc("/healthz", s.handleHealthz())
 
-	// TODO enable authz middleware on routes.
+	authmiddleware := authorization.New(authorization.WithCookieName(s.authCookieName),
+		authorization.WithAuthorizationHeader())
 
-	return logRequestHandler(s.router), nil
+	api := v1beta1.New(s.router)
+	api.Use(authmiddleware)
+
+	return s.router, nil
 }
 
 func (s *Server) handleRoot() http.HandlerFunc {
