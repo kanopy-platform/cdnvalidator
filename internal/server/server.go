@@ -57,14 +57,12 @@ func (s *Server) handleHealthz() http.HandlerFunc {
 			"status": "ok",
 		}
 
-		bytes, err := json.Marshal(status)
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(status)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
-
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprint(w, string(bytes))
 	}
 }
 

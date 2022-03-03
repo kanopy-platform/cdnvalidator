@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/kanopy-platform/cdnvalidator/internal/core"
 	"github.com/kanopy-platform/cdnvalidator/internal/jwt"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,7 +18,7 @@ type Mock struct {
 // e.g. http.HandleFunc("/health-check", HealthCheckHandler)
 func (m *Mock) MockContextHandler(w http.ResponseWriter, r *http.Request) {
 	// inspect context
-	m.Claims = r.Context().Value(ContextBoundaryKey).([]string)
+	m.Claims = r.Context().Value(core.ContextBoundaryKey).([]string)
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
