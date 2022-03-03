@@ -15,7 +15,6 @@ func addRepeatedDistribution(originalDistribution string) configChange {
 }
 
 func setupConfig(changes ...configChange) *Config {
-
 	config := config{
 		Distributions: Distributions{
 			"dis1": {

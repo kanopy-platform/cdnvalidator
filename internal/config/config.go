@@ -92,6 +92,8 @@ func (c *Config) claimDistributions(claim string) Distributions {
 	return distributions
 }
 
+// claimsDistributions receive a slice of claims and
+// returns a map of distributions
 func (c *Config) claimsDistributions(claims []string) Distributions {
 	allDistributions := make(Distributions)
 
@@ -105,8 +107,7 @@ func (c *Config) claimsDistributions(claims []string) Distributions {
 	return allDistributions
 }
 
-// ClaimsDistributions receive a slice of claims and
-// returns a map of distributions
+// ClaimsDistributions is the public access to claimsDistributions
 func (c *Config) ClaimsDistributions(claims []string) Distributions {
 	return c.claimsDistributions(claims)
 }
