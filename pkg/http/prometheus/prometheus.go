@@ -46,17 +46,11 @@ func (m *middleware) handler(next http.Handler) http.Handler {
 		path, _ := route.GetPathTemplate()
 		metrics := httpsnoop.CaptureMetrics(next, w, r)
 
-		labels := []string{cleanString(path), cleanStatus(metrics.Code), cleanString(r.Method)}
+		labels := []string{strings.ToLower(path), strconv.Itoa(metrics.Code), strings.ToLower(r.Method)}
 
-		go m.httpTotalRequests.WithLabelValues(labels...).Inc()
-		go m.httpDuration.WithLabelValues(labels...).Observe(metrics.Duration.Seconds())
+		go func() {
+			m.httpTotalRequests.WithLabelValues(labels...).Inc()
+			m.httpDuration.WithLabelValues(labels...).Observe(metrics.Duration.Seconds())
+		}()
 	})
-}
-
-func cleanString(code string) string {
-	return strings.ToLower(code)
-}
-
-func cleanStatus(status int) string {
-	return strconv.Itoa(status)
 }
