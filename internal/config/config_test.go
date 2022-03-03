@@ -166,3 +166,17 @@ func TestClaimsDistributionNames(t *testing.T) {
 		assert.Equal(t, test.want, config.ClaimsDistributionNames(test.claims))
 	}
 }
+
+func TestClaimsDistribution(t *testing.T) {
+	config := setupConfig()
+
+	claims := []string{"grp1"}
+
+	want := Distribution{
+		ID:     "123",
+		Prefix: "/foo",
+	}
+
+	assert.Equal(t, want, config.ClaimsDistribution(claims, "dis1"))
+	assert.Equal(t, Distribution{}, config.ClaimsDistribution(claims, "no-exists"))
+}

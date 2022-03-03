@@ -126,8 +126,14 @@ func (c *Config) ClaimsDistributionNames(claims []string) []string {
 	return names
 }
 
+// ClaimsDistribution gets an specific distribution properties from claims
+// if the distributionName is not present it returns an empty Distribution
 func (c *Config) ClaimsDistribution(claims []string, distributionName string) Distribution {
 	distros := c.claimsDistributions(claims)
 
-	return distros[distributionName]
+	if distro, ok := distros[distributionName]; ok {
+		return distro
+	}
+
+	return Distribution{}
 }
