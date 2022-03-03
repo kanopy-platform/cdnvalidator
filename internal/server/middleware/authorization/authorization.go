@@ -6,14 +6,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/kanopy-platform/cdnvalidator/internal/core"
 	"github.com/kanopy-platform/cdnvalidator/internal/jwt"
 	log "github.com/sirupsen/logrus"
-)
-
-type ClaimsKey string
-
-const (
-	ContextBoundaryKey ClaimsKey = "claims"
 )
 
 type middleware struct {
@@ -32,7 +27,7 @@ func New(opts ...Option) func(http.Handler) http.Handler {
 }
 
 func (m *middleware) addClaims(ctx context.Context, claims []string) context.Context {
-	return context.WithValue(ctx, ContextBoundaryKey, claims)
+	return context.WithValue(ctx, core.ContextBoundaryKey, claims)
 }
 
 func (m *middleware) getAuthorizationToken(req *http.Request) (string, error) {
