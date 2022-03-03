@@ -71,7 +71,7 @@ func checkErrors(distributionName, invalidationID string) error {
 	}
 
 	if distributionName == "unauthorized distribution" {
-		return NewInvalidationError(InvalidationUnAuthorizedErrorCode, fmt.Errorf("distribution unauthorized"), distributionName)
+		return NewInvalidationError(InvalidationUnauthorizedErrorCode, fmt.Errorf("distribution unauthorized"), distributionName)
 	}
 
 	if invalidationID == "notfound" {

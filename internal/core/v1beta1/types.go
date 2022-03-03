@@ -30,12 +30,12 @@ type InvalidationRequest struct {
 
 const (
 	ResourceNotFoundErrorCode         = 404
-	InvalidationUnAuthorizedErrorCode = 403
+	InvalidationUnauthorizedErrorCode = 403
 )
 
 var (
 	statusCodeReasons = map[int]string{
-		InvalidationUnAuthorizedErrorCode: "User is not entitled to invalidate distribution: %s",
+		InvalidationUnauthorizedErrorCode: "User is not entitled to invalidate distribution: %s",
 		ResourceNotFoundErrorCode:         "Resource not found: %s",
 	}
 )
@@ -73,7 +73,7 @@ func ErrorIsUnauthorized(err error) bool {
 		return false
 	}
 
-	return ierr.Code == InvalidationUnAuthorizedErrorCode
+	return ierr.Code == InvalidationUnauthorizedErrorCode
 }
 
 func ErrorResourceNotFound(err error) bool {
