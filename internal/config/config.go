@@ -102,9 +102,11 @@ func (c *Config) watch(filePath string, watcher *fsnotify.Watcher) {
 			// needs to take place.
 			// https://kubernetes.io/docs/concepts/configuration/secret/#secret-files-permissions
 			if event.Op&fsnotify.Remove == fsnotify.Remove {
-				watcher.Remove(event.Name)
+				if err := watcher.Remove(event.Name); err != nil {
+					log.Errorf("error removing watcher from configuration: %v", err)
+				}
 				if err := watcher.Add(event.Name); err != nil {
-					log.Errorf("Error re-watching revoked token list: %v", err)
+					log.Errorf("error re-watching configuration: %v", err)
 				}
 				reload = true
 			}
@@ -114,9 +116,9 @@ func (c *Config) watch(filePath string, watcher *fsnotify.Watcher) {
 
 			if reload {
 				if err := c.Load(event.Name); err != nil {
-					log.Errorf("Error refreshing revoked token list: %v", err)
+					log.Errorf("error refreshing configuration: %v", err)
 				} else {
-					log.Info("revoked tokens list refreshed")
+					log.Info("configuration refreshed")
 				}
 			}
 		case err, ok := <-watcher.Errors:
