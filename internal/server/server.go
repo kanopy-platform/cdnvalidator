@@ -35,6 +35,7 @@ func New(opts ...Option) (http.Handler, error) {
 	s.router.HandleFunc("/", s.handleRoot())
 	s.router.HandleFunc("/healthz", s.handleHealthz())
 	s.router.Handle("/metrics", promhttp.Handler())
+	s.router.PathPrefix("/swagger/").Handler(http.StripPrefix("/swagger", http.FileServer(http.Dir("swagger"))))
 
 	authmiddleware := authorization.New(authorization.WithCookieName(s.authCookieName),
 		authorization.WithAuthorizationHeader())
