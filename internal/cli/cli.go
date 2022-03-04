@@ -1,8 +1,13 @@
 package cli
 
 import (
+	"context"
 	"net/http"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/kanopy-platform/cdnvalidator/internal/server"
 	log "github.com/sirupsen/logrus"
@@ -58,5 +63,40 @@ func (c *RootCommand) runE(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return http.ListenAndServe(addr, s)
+	srv := &http.Server{
+		Addr:         addr,
+		WriteTimeout: time.Second * 15,
+		ReadTimeout:  time.Second * 15,
+		IdleTimeout:  time.Second * 60,
+		Handler:      s,
+	}
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil {
+			log.Infof("listen: %s", err)
+		}
+	}()
+
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	log.Info("Server started")
+
+	<-done
+
+	log.Info("Server stopping...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer func() {
+		cancel()
+	}()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Errorf("Server Shutdown failed: %+v", err)
+		return err
+	}
+
+	log.Info("Server shutdown")
+
+	return nil
 }
