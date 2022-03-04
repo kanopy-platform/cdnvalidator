@@ -100,5 +100,5 @@ func TestLoad(t *testing.T) {
 	err = tmpFile.Close()
 	assert.NoError(t, err)
 
-	assert.NoError(t, config.Load(tmpFile.Name()))
+	assert.NoError(t, config.load(tmpFile.Name()))
 }

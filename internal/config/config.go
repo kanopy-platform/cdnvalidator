@@ -63,7 +63,7 @@ func (c *Config) parse(data []byte) error {
 	return nil
 }
 
-func (c *Config) Load(file string) error {
+func (c *Config) load(file string) error {
 	data, err := os.ReadFile(file)
 	if err != nil {
 		return err
@@ -86,15 +86,15 @@ func (c *Config) Watch(filePath string) error {
 		return err
 	}
 
-	if err := c.Load(filePath); err != nil {
+	if err := c.load(filePath); err != nil {
 		return fmt.Errorf("error loading configuration: %v", err)
 	}
 
-	go c.watch(filePath, watcher)
+	go c.watcher(filePath, watcher)
 	return nil
 }
 
-func (c *Config) watch(filePath string, watcher *fsnotify.Watcher) {
+func (c *Config) watcher(filePath string, watcher *fsnotify.Watcher) {
 	defer watcher.Close()
 	for {
 		select {
@@ -119,7 +119,7 @@ func (c *Config) watch(filePath string, watcher *fsnotify.Watcher) {
 			}
 
 			if reload {
-				if err := c.Load(event.Name); err != nil {
+				if err := c.load(event.Name); err != nil {
 					log.Errorf("error refreshing configuration: %v", err)
 				} else {
 					log.Info("configuration refreshed")
