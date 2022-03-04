@@ -9,12 +9,13 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// two vanity distributions with the same distribution ID MUST NOT share the same prefix.
+// validateDistributions checks that the condition that
+// two distributions with the same distribution ID MUST NOT share the same prefix.
 // or in other terms, every pair of id,prefix (Distribution) must be unique
-func (c *Config) validateDistributions() error {
-	uniqueMap := make(map[Distribution]struct{})
+func validateDistributions(distributions distributionsMap) error {
+	uniqueMap := make(map[*Distribution]struct{})
 
-	for _, value := range c.distributions {
+	for _, value := range distributions {
 		if _, ok := uniqueMap[value]; ok {
 			return fmt.Errorf("error parsing configuration: distribution value duplicated id: %s prefix: %s", value.ID, value.Prefix)
 		}
@@ -26,20 +27,33 @@ func (c *Config) validateDistributions() error {
 }
 
 func (c *Config) parse(data []byte) error {
-	config := struct {
-		Distributions Distributions `json:"distributions"`
-		Entitlements  Entitlements  `json:"entitlements"`
-	}{}
+	config := initConfig()
+
 	if err := yaml.Unmarshal(data, config); err != nil {
 		return err
 	}
 
-	c.distributions = config.Distributions
-	c.entitlements = config.Entitlements
-
-	err := c.validateDistributions()
+	err := validateDistributions(config.Distributions)
 	if err != nil {
 		return err
+	}
+
+	for name, value := range config.Distributions {
+		c.distributions.Set(name, value)
+	}
+	for _, name := range c.distributions.Names() {
+		if _, ok := config.Distributions[name]; !ok {
+			c.distributions.Delete(name)
+		}
+	}
+
+	for name, value := range config.Entitlements {
+		c.entitlements.Set(name, value)
+	}
+	for _, name := range c.entitlements.Names() {
+		if _, ok := config.Entitlements[name]; !ok {
+			c.entitlements.Delete(name)
+		}
 	}
 
 	return nil

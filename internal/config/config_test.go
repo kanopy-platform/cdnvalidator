@@ -1,79 +1,69 @@
 package config
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
 
 	"errors"
+
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/yaml"
 )
 
 func setupConfig() *Config {
-	config := &Config{
-		distributions: Distributions{
-			"dis1": {
-				ID:     "123",
-				Prefix: "/foo",
-			},
-			"dis2": {
-				ID:     "456",
-				Prefix: "/bar",
-			},
-		},
-		entitlements: Entitlements{
-			"grp1": {
-				"dis1",
-				"dis2",
-			},
-			"grp2": {
-				"dis2",
-			},
-		},
-	}
+	config := New()
+
+	config.distributions.Set("dis1", &Distribution{ID: "123", Prefix: "/foo"})
+	config.distributions.Set("dis2", &Distribution{ID: "456", Prefix: "/bar"})
+	config.entitlements.Set("grp1", []string{"dis1", "dis2"})
+	config.entitlements.Set("grp1", []string{"dis1", "dis2"})
 
 	return config
 }
 
 func TestValidateDistributions(t *testing.T) {
+	distributions := distributionsMap{
+		"dis1": {
+			ID:     "123",
+			Prefix: "/foo",
+		},
+		"dis2": {
+			ID:     "456",
+			Prefix: "/bar",
+		},
+	}
+
+	repeatedDistributions := make(distributionsMap)
+	for name, value := range distributions {
+		repeatedDistributions[name] = value
+	}
+
+	repeatedDistributions["repeated"] = &Distribution{ID: "123", Prefix: "/foo"}
+
 	tests := []struct {
-		config *Config
-		want   error
+		distros distributionsMap
+		want    error
 	}{
 		{
-			config: setupConfig(),
-			want:   nil,
+			distros: distributions,
+			want:    nil,
 		},
 		{
-			config: &Config{
-				distributions: Distributions{
-					"dis1": {
-						ID:     "123",
-						Prefix: "/foo",
-					},
-					"dis2": {
-						ID:     "456",
-						Prefix: "/bar",
-					},
-					"repeated": {
-						ID:     "123",
-						Prefix: "/foo",
-					},
-				},
-				entitlements: Entitlements{},
-			},
-			want: errors.New("error parsing configuration: distribution value duplicated id: 123 prefix: /foo"),
+			distros: repeatedDistributions,
+			want:    errors.New("error parsing configuration: distribution value duplicated id: 123 prefix: /foo"),
 		},
 	}
 
 	for _, test := range tests {
-		assert.Equal(t, test.want, test.config.validateDistributions())
+		fmt.Println(test.distros)
+		assert.Equal(t, test.want, validateDistributions(test.distros))
 	}
 }
 
 func TestParse(t *testing.T) {
-	config := &Config{}
+	config := New()
 
 	yamlString := `---
 distributions:
@@ -95,7 +85,7 @@ entitlements:
 }
 
 func TestLoad(t *testing.T) {
-	config := &Config{}
+	config := New()
 
 	tmpFile, err := ioutil.TempFile(os.TempDir(), "cdnvalidator-")
 	assert.NoError(t, err)
