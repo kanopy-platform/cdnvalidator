@@ -21,12 +21,12 @@ func (d *Distribution) stringPropertiesHash() string {
 	return fmt.Sprintf("%s%s", d.ID, d.Prefix)
 }
 
-type Distributions struct {
+type distributions struct {
 	mu      sync.RWMutex
 	entries distributionsMap
 }
 
-func (d *Distributions) Get(key string) (*Distribution, bool) {
+func (d *distributions) Get(key string) (*Distribution, bool) {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 
@@ -41,21 +41,21 @@ func (d *Distributions) Get(key string) (*Distribution, bool) {
 	return result, ok
 }
 
-func (d *Distributions) Set(key string, value *Distribution) {
+func (d *distributions) Set(key string, value *Distribution) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
 	d.entries[key] = value
 }
 
-func (d *Distributions) Delete(key string) {
+func (d *distributions) Delete(key string) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
 	delete(d.entries, key)
 }
 
-func (d *Distributions) Names() []string {
+func (d *distributions) Names() []string {
 	var names []string
 
 	d.mu.RLock()
@@ -68,12 +68,12 @@ func (d *Distributions) Names() []string {
 	return names
 }
 
-type Entitlements struct {
+type entitlements struct {
 	mu      sync.RWMutex
 	entries entitlementsMap
 }
 
-func (e *Entitlements) Get(key string) ([]distributionName, bool) {
+func (e *entitlements) Get(key string) ([]distributionName, bool) {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 
@@ -82,21 +82,21 @@ func (e *Entitlements) Get(key string) ([]distributionName, bool) {
 	return result, ok
 }
 
-func (e *Entitlements) Set(key string, value []distributionName) {
+func (e *entitlements) Set(key string, value []distributionName) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
 	e.entries[key] = value
 }
 
-func (e *Entitlements) Delete(key string) {
+func (e *entitlements) Delete(key string) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
 	delete(e.entries, key)
 }
 
-func (e *Entitlements) Names() []string {
+func (e *entitlements) Names() []string {
 	var names []string
 
 	e.mu.RLock()
@@ -110,8 +110,8 @@ func (e *Entitlements) Names() []string {
 }
 
 type Config struct {
-	distributions Distributions
-	entitlements  Entitlements
+	distributions distributions
+	entitlements  entitlements
 }
 
 func New() *Config {
