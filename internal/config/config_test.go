@@ -18,7 +18,7 @@ func setupConfig() *Config {
 	config.distributions.Set("dis1", &Distribution{ID: "123", Prefix: "/foo"})
 	config.distributions.Set("dis2", &Distribution{ID: "456", Prefix: "/bar"})
 	config.entitlements.Set("grp1", []string{"dis1", "dis2"})
-	config.entitlements.Set("grp1", []string{"dis1", "dis2"})
+	config.entitlements.Set("grp2", []string{"dis2"})
 
 	return config
 }
@@ -101,4 +101,33 @@ func TestLoad(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.NoError(t, config.load(tmpFile.Name()))
+}
+
+func TestDistributionsFromClaims(t *testing.T) {
+	config := setupConfig()
+
+	tests := []struct {
+		claims []string
+		want   map[string]bool
+	}{
+		{
+			claims: []string{"grp1"},
+			want:   map[string]bool{"dis1": true, "dis2": true},
+		},
+		{
+			claims: []string{"grp2"},
+			want:   map[string]bool{"dis2": true},
+		},
+	}
+
+	for _, test := range tests {
+		assert.Equal(t, test.want, config.DistributionsFromClaims(test.claims))
+	}
+}
+
+func TestDistribution(t *testing.T) {
+	config := setupConfig()
+	want := &Distribution{ID: "123", Prefix: "/foo"}
+
+	assert.Equal(t, want, config.Distribution("dis1"))
 }

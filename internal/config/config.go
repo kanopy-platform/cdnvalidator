@@ -133,3 +133,29 @@ func (c *Config) watcher(filePath string, watcher *fsnotify.Watcher) {
 		}
 	}
 }
+
+// DistributionsFromClaims returns a lookup map of Distribution names
+func (c *Config) DistributionsFromClaims(claims []string) map[string]bool {
+	lookup := make(map[string]bool)
+
+	for _, claim := range claims {
+		if distros, ok := c.entitlements.Get(claim); ok {
+			for _, distro := range distros {
+				if _, ok := c.distributions.Get(distro); ok {
+					lookup[distro] = true
+				}
+			}
+		}
+	}
+
+	return lookup
+}
+
+// Distribution returns a specific Distribution by name
+func (c *Config) Distribution(name string) *Distribution {
+	if distro, ok := c.distributions.Get(name); ok {
+		return distro
+	}
+
+	return nil
+}
