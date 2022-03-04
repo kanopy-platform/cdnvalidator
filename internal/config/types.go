@@ -1,6 +1,9 @@
 package config
 
-import "sync"
+import (
+	"fmt"
+	"sync"
+)
 
 type distributionName = string
 type claimName = string
@@ -10,6 +13,12 @@ type entitlementsMap map[claimName][]distributionName
 type Distribution struct {
 	ID     string `json:"id"`
 	Prefix string `json:"prefix"`
+}
+
+// StringPropertiesHash concatenates all string properties in Distribution
+// to form a unique hash
+func (d *Distribution) stringPropertiesHash() string {
+	return fmt.Sprintf("%s%s", d.ID, d.Prefix)
 }
 
 type Distributions struct {

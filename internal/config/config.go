@@ -13,21 +13,21 @@ import (
 // two distributions with the same distribution ID MUST NOT share the same prefix.
 // or in other terms, every pair of id,prefix (Distribution) must be unique
 func validateDistributions(distributions distributionsMap) error {
-	uniqueMap := make(map[*Distribution]struct{})
+	uniqueMap := make(map[string]struct{})
 
 	for _, value := range distributions {
-		if _, ok := uniqueMap[value]; ok {
+		hash := value.stringPropertiesHash()
+		if _, ok := uniqueMap[hash]; ok {
 			return fmt.Errorf("error parsing configuration: distribution value duplicated id: %s prefix: %s", value.ID, value.Prefix)
 		}
 
-		uniqueMap[value] = struct{}{}
+		uniqueMap[hash] = struct{}{}
 	}
 
 	return nil
 }
 
 func (c *Config) parse(data []byte) error {
-
 	config := struct {
 		Distributions distributionsMap `json:"distributions"`
 		Entitlements  entitlementsMap  `json:"entitlements"`
