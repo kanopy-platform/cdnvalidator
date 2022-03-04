@@ -27,7 +27,11 @@ func validateDistributions(distributions distributionsMap) error {
 }
 
 func (c *Config) parse(data []byte) error {
-	config := initConfig()
+
+	config := struct {
+		Distributions distributionsMap `json:"distributions"`
+		Entitlements  entitlementsMap  `json:"entitlements"`
+	}{}
 
 	if err := yaml.Unmarshal(data, config); err != nil {
 		return err

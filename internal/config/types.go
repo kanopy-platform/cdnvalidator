@@ -98,19 +98,3 @@ func New() *Config {
 
 	return config
 }
-
-// config is used for marshalling
-type config struct {
-	Distributions distributionsMap `json:"distributions"`
-	Entitlements  entitlementsMap  `json:"entitlements"`
-}
-
-func initConfig() *config {
-	dMap := make(distributionsMap)
-	eMap := make(entitlementsMap)
-
-	return &config{
-		Distributions: dMap,
-		Entitlements:  eMap,
-	}
-}
