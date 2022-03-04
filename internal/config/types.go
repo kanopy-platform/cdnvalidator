@@ -28,8 +28,15 @@ type Distributions struct {
 
 func (d *Distributions) Get(key string) (*Distribution, bool) {
 	d.mu.RLock()
-	result, ok := d.entries[key]
-	d.mu.RUnlock()
+	defer d.mu.RUnlock()
+
+	result := &Distribution{}
+	_, ok := d.entries[key]
+
+	if ok {
+		result.ID = d.entries[key].ID
+		result.Prefix = d.entries[key].Prefix
+	}
 
 	return result, ok
 }
