@@ -27,7 +27,7 @@ func New(opts ...Option) func(http.Handler) http.Handler {
 	}
 
 	m.httpDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "http_duration_seconds_bucket",
+		Name:    "http_duration_seconds",
 		Help:    "Duration of HTTP requests.",
 		Buckets: m.buckets,
 	}, []string{"path", "code", "method"})
