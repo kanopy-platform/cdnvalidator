@@ -12,6 +12,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/kanopy-platform/cdnvalidator/internal/server/api/v1beta1"
 	"github.com/kanopy-platform/cdnvalidator/internal/server/middleware/authorization"
+	"github.com/kanopy-platform/cdnvalidator/pkg/http/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type Server struct {
@@ -28,9 +30,11 @@ func New(opts ...Option) (http.Handler, error) {
 		}
 	}
 
+	s.router.Use(prometheus.New())
 	s.router.Use(logRequestHandler)
 	s.router.HandleFunc("/", s.handleRoot())
 	s.router.HandleFunc("/healthz", s.handleHealthz())
+	s.router.Handle("/metrics", promhttp.Handler())
 
 	authmiddleware := authorization.New(authorization.WithCookieName(s.authCookieName),
 		authorization.WithAuthorizationHeader())

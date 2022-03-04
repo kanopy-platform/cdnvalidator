@@ -1,0 +1,21 @@
+sources:
+  go: true
+allowed:
+  - mit
+  - apache-2.0
+  - mpl-2.0
+  - bsd-2-clause
+  - bsd-3-clause
+  - isc
+reviewed:
+  go:
+    # default accept
+    - github.com/magiconair/properties #bsd-2
+    - github.com/pmezard/go-difflib/difflib # bsd-style
+    - golang.org/x/**/* # bsd-style
+    - gopkg.in/ini.v1 # apache-2.0
+    - gopkg.in/yaml.v2 # apache-2.0
+    - google.golang.org/**/*
+    # custom
+    - github.com/gorilla/mux # bsd-3-clause
+
