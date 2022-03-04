@@ -40,7 +40,7 @@ func TestValidateDistributions(t *testing.T) {
 		repeatedDistributions[name] = value
 	}
 
-	repeatedDistributions["repeated"] = &Distribution{ID: "123", Prefix: "/foo"}
+	repeatedDistributions["repeated"] = distributions["dis1"]
 
 	tests := []struct {
 		distros distributionsMap
