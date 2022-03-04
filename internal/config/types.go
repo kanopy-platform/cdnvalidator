@@ -43,24 +43,27 @@ func (d *Distributions) Get(key string) (*Distribution, bool) {
 
 func (d *Distributions) Set(key string, value *Distribution) {
 	d.mu.Lock()
+	defer d.mu.Unlock()
+
 	d.entries[key] = value
-	d.mu.Unlock()
 }
 
 func (d *Distributions) Delete(key string) {
 	d.mu.Lock()
+	defer d.mu.Unlock()
+
 	delete(d.entries, key)
-	d.mu.Unlock()
 }
 
 func (d *Distributions) Names() []string {
 	var names []string
 
 	d.mu.RLock()
+	defer d.mu.RUnlock()
+
 	for name := range d.entries {
 		names = append(names, name)
 	}
-	d.mu.RUnlock()
 
 	return names
 }
@@ -72,32 +75,36 @@ type Entitlements struct {
 
 func (e *Entitlements) Get(key string) ([]distributionName, bool) {
 	e.mu.RLock()
+	defer e.mu.RUnlock()
+
 	result, ok := e.entries[key]
-	e.mu.RUnlock()
 
 	return result, ok
 }
 
 func (e *Entitlements) Set(key string, value []distributionName) {
 	e.mu.Lock()
+	defer e.mu.Unlock()
+
 	e.entries[key] = value
-	e.mu.Unlock()
 }
 
 func (e *Entitlements) Delete(key string) {
 	e.mu.Lock()
+	defer e.mu.Unlock()
+
 	delete(e.entries, key)
-	e.mu.Unlock()
 }
 
 func (e *Entitlements) Names() []string {
 	var names []string
 
 	e.mu.RLock()
+	defer e.mu.RUnlock()
+
 	for name := range e.entries {
 		names = append(names, name)
 	}
-	e.mu.RUnlock()
 
 	return names
 }
