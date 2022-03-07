@@ -1,9 +1,9 @@
 {
   "swagger": "2.0",
   "paths": {
-    "/api/v1beta/distributions": {
+    "/api/v1beta1/distributions": {
       "get": {
-        "description": "Get a list of distributions you are entitled to perform invaildiations",
+        "description": "Get a list of distributions you are entitled to perform invalidations",
         "tags": [
           "GetDistributions"
         ],
@@ -30,7 +30,7 @@
         }
       }
     },
-    "/api/v1beta/distributions/{name}": {
+    "/api/v1beta1/distributions/{name}": {
       "post": {
         "description": "Submit an Invalidation Request",
         "tags": [
@@ -89,7 +89,7 @@
         }
       }
     },
-    "/api/v1beta/distributions/{name}/invalidations/{id}": {
+    "/api/v1beta1/distributions/{name}/invalidations/{id}": {
       "get": {
         "description": "Get an Invalidation Request",
         "tags": [
