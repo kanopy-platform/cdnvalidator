@@ -27,7 +27,7 @@ func New(router *mux.Router) *mux.Router {
 
 // swagger:route GET /api/v1beta1/distributions GetDistributions get-distributions
 //
-// Get a list of distributions you are entitled to perform invaildiations
+// Get a list of distributions you are entitled to perform invalidations
 //
 //
 // responses:
