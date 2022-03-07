@@ -26,19 +26,18 @@ type distributions struct {
 	entries distributionsMap
 }
 
-func (d *distributions) Get(key string) (*Distribution, bool) {
+func (d *distributions) Get(key string) *Distribution {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 
-	result := &Distribution{}
-	_, ok := d.entries[key]
-
-	if ok {
-		result.ID = d.entries[key].ID
-		result.Prefix = d.entries[key].Prefix
+	if entry, ok := d.entries[key]; ok {
+		return &Distribution{
+			ID:     entry.ID,
+			Prefix: entry.Prefix,
+		}
 	}
 
-	return result, ok
+	return nil
 }
 
 func (d *distributions) Set(key string, value *Distribution) {

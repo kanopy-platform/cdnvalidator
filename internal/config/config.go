@@ -141,7 +141,7 @@ func (c *Config) DistributionsFromClaims(claims []string) map[string]bool {
 	for _, claim := range claims {
 		if distros, ok := c.entitlements.Get(claim); ok {
 			for _, distro := range distros {
-				if _, ok := c.distributions.Get(distro); ok {
+				if d := c.distributions.Get(distro); d != nil {
 					lookup[distro] = true
 				}
 			}
@@ -153,9 +153,5 @@ func (c *Config) DistributionsFromClaims(claims []string) map[string]bool {
 
 // Distribution returns a specific Distribution by name
 func (c *Config) Distribution(name string) *Distribution {
-	if distro, ok := c.distributions.Get(name); ok {
-		return distro
-	}
-
-	return nil
+	return c.distributions.Get(name)
 }
