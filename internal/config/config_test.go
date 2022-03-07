@@ -129,4 +129,5 @@ func TestDistribution(t *testing.T) {
 	want := &Distribution{ID: "123", Prefix: "/foo"}
 
 	assert.Equal(t, want, config.Distribution("dis1"))
+	assert.Nil(t, config.Distribution("no-exists"))
 }
