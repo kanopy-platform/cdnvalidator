@@ -101,7 +101,7 @@ entitlements:
 	assert.NoError(t, err)
 
 	assert.Nil(t, config.distributions.Get("dis2"))
-	grp1, ok := config.entitlements.Get("grp2")
+	_, ok := config.entitlements.Get("grp2")
 	assert.False(t, ok)
 }
 
