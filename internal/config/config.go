@@ -16,7 +16,7 @@ func validateDistributions(distributions distributionsMap) error {
 	uniqueMap := make(map[string]struct{})
 
 	for _, value := range distributions {
-		hash := value.stringPropertiesHash()
+		hash := value.hashKey()
 		if _, ok := uniqueMap[hash]; ok {
 			return fmt.Errorf("error parsing configuration: distribution value duplicated id: %s prefix: %s", value.ID, value.Prefix)
 		}

@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -57,7 +56,6 @@ func TestValidateDistributions(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		fmt.Println(test.distros)
 		assert.Equal(t, test.want, validateDistributions(test.distros))
 	}
 }
@@ -82,6 +80,7 @@ entitlements:
 `
 	err := config.parse([]byte(yamlString))
 	assert.NoError(t, err)
+
 }
 
 func TestLoad(t *testing.T) {

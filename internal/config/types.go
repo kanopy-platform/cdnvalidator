@@ -17,7 +17,7 @@ type Distribution struct {
 
 // StringPropertiesHash concatenates all string properties in Distribution
 // to form a unique hash
-func (d *Distribution) stringPropertiesHash() string {
+func (d *Distribution) hashKey() string {
 	return fmt.Sprintf("%s%s", d.ID, d.Prefix)
 }
 
