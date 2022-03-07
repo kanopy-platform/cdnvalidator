@@ -25,7 +25,15 @@ func New(router *mux.Router) *mux.Router {
 	return api
 }
 
-// GET Distributions /api/v1beta/distributions
+// swagger:route GET /api/v1beta1/distributions GetDistributions get-distributions
+//
+// Get a list of distributions you are entitled to perform invalidations
+//
+//
+// responses:
+//   200: DistributionResponse
+//   401: ErrorResponse
+//   500: ErrorResponse
 func getDistributions(ds DistributionService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		d, err := ds.List(r.Context())
@@ -44,7 +52,17 @@ func getDistributions(ds DistributionService) http.HandlerFunc {
 	}
 }
 
-// POST Distributions /api/v1beta/distributions/{name}
+// swagger:route POST  /api/v1beta1/distributions/{name} SubmitInvalidation submit-invalidation
+//
+// Submit an Invalidation Request
+//
+//
+// responses:
+//   200: InvalidationResponse
+//   400: InvalidationError
+//   403: ErrorResponse
+//   404: ErrorResponse
+//   500: ErrorResponse
 func createInvalidation(ds DistributionService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -86,7 +104,17 @@ func createInvalidation(ds DistributionService) http.HandlerFunc {
 	}
 }
 
-// GET Invalidation /api/v1beta/distributions/{name}/invalidations/{id}
+// swagger:route GET  /api/v1beta1/distributions/{name}/invalidations/{id} InvalidationResponse get-invalidation-status
+//
+// Get an Invalidation Request
+//
+//
+// responses:
+//   200: InvalidationResponse
+//   400: InvalidationError
+//   403: ErrorResponse
+//   404: ErrorResponse
+//   500: ErrorResponse
 func getInvalidation(ds DistributionService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

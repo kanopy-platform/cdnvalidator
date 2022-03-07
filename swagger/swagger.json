@@ -1,0 +1,234 @@
+{
+  "swagger": "2.0",
+  "paths": {
+    "/api/v1beta/distributions": {
+      "get": {
+        "description": "Get a list of distributions you are entitled to perform invaildiations",
+        "tags": [
+          "GetDistributions"
+        ],
+        "operationId": "get-distributions",
+        "responses": {
+          "200": {
+            "description": "DistributionResponse",
+            "schema": {
+              "$ref": "#/definitions/DistributionResponse"
+            }
+          },
+          "401": {
+            "description": "ErrorResponse",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "ErrorResponse",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1beta/distributions/{name}": {
+      "post": {
+        "description": "Submit an Invalidation Request",
+        "tags": [
+          "SubmitInvalidation"
+        ],
+        "operationId": "submit-invalidation",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The Name of the distribution",
+            "name": "Name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "The body to create the invalidation",
+            "name": "Body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/InvalidationRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "InvalidationResponse",
+            "schema": {
+              "$ref": "#/definitions/InvalidationResponse"
+            }
+          },
+          "400": {
+            "description": "InvalidationError",
+            "schema": {
+              "$ref": "#/definitions/InvalidationError"
+            }
+          },
+          "403": {
+            "description": "ErrorResponse",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "404": {
+            "description": "ErrorResponse",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "ErrorResponse",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1beta/distributions/{name}/invalidations/{id}": {
+      "get": {
+        "description": "Get an Invalidation Request",
+        "tags": [
+          "InvalidationResponse"
+        ],
+        "operationId": "get-invalidation-status",
+        "responses": {
+          "200": {
+            "description": "InvalidationResponse",
+            "schema": {
+              "$ref": "#/definitions/InvalidationResponse"
+            }
+          },
+          "400": {
+            "description": "InvalidationError",
+            "schema": {
+              "$ref": "#/definitions/InvalidationError"
+            }
+          },
+          "403": {
+            "description": "ErrorResponse",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "404": {
+            "description": "ErrorResponse",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "ErrorResponse",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Distribution": {
+      "type": "object",
+      "properties": {
+        "pathPrefix": {
+          "type": "string",
+          "x-go-name": "PathPrefix"
+        }
+      },
+      "x-go-package": "github.com/kanopy-platform/cdnvalidator/internal/core/v1beta1"
+    },
+    "DistributionResponse": {
+      "type": "object",
+      "properties": {
+        "distributions": {
+          "description": "The Distributions a user is entitled to perform invalidations against.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Distribution"
+          },
+          "x-go-name": "Distributions"
+        }
+      },
+      "x-go-name": "DistributionsResponse",
+      "x-go-package": "github.com/kanopy-platform/cdnvalidator/internal/core/v1beta1"
+    },
+    "Duration": {
+      "description": "A Duration represents the elapsed time between two instants\nas an int64 nanosecond count. The representation limits the\nlargest representable duration to approximately 290 years.",
+      "type": "integer",
+      "format": "int64",
+      "x-go-package": "time"
+    },
+    "ErrorResponse": {
+      "type": "string",
+      "x-go-package": "github.com/kanopy-platform/cdnvalidator/internal/core/v1beta1"
+    },
+    "InvalidationError": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "description": "The Status of the invalidation request",
+          "type": "string",
+          "x-go-name": "Status"
+        }
+      },
+      "x-go-package": "github.com/kanopy-platform/cdnvalidator/internal/core/v1beta1"
+    },
+    "InvalidationMeta": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "description": "The Status of the invalidation request",
+          "type": "string",
+          "x-go-name": "Status"
+        }
+      },
+      "x-go-package": "github.com/kanopy-platform/cdnvalidator/internal/core/v1beta1"
+    },
+    "InvalidationRequest": {
+      "type": "object",
+      "properties": {
+        "paths": {
+          "description": "The Paths to submit for invalidation",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "Paths"
+        }
+      },
+      "x-go-package": "github.com/kanopy-platform/cdnvalidator/internal/core/v1beta1"
+    },
+    "InvalidationResponse": {
+      "type": "object",
+      "properties": {
+        "createTime": {
+          "$ref": "#/definitions/Duration"
+        },
+        "id": {
+          "description": "The ID of the Invalidation Request",
+          "type": "string",
+          "x-go-name": "ID"
+        },
+        "paths": {
+          "description": "The Paths array requested for invalidation",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "Paths"
+        },
+        "status": {
+          "description": "The Status of the invalidation request",
+          "type": "string",
+          "x-go-name": "Status"
+        }
+      },
+      "x-go-package": "github.com/kanopy-platform/cdnvalidator/internal/core/v1beta1"
+    }
+  }
+}
