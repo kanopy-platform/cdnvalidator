@@ -25,7 +25,7 @@ func New(router *mux.Router) *mux.Router {
 	return api
 }
 
-// swagger:route GET /api/v1beta/distributions GetDistributions get-distributions
+// swagger:route GET /api/v1beta1/distributions GetDistributions get-distributions
 //
 // Get a list of distributions you are entitled to perform invaildiations
 //
@@ -52,7 +52,7 @@ func getDistributions(ds DistributionService) http.HandlerFunc {
 	}
 }
 
-// swagger:route POST  /api/v1beta/distributions/{name} SubmitInvalidation submit-invalidation
+// swagger:route POST  /api/v1beta1/distributions/{name} SubmitInvalidation submit-invalidation
 //
 // Submit an Invalidation Request
 //
@@ -104,7 +104,7 @@ func createInvalidation(ds DistributionService) http.HandlerFunc {
 	}
 }
 
-// swagger:route GET  /api/v1beta/distributions/{name}/invalidations/{id} InvalidationResponse get-invalidation-status
+// swagger:route GET  /api/v1beta1/distributions/{name}/invalidations/{id} InvalidationResponse get-invalidation-status
 //
 // Get an Invalidation Request
 //

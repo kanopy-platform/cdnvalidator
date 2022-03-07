@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install --yes ca-certificates
 RUN groupadd -r app && useradd --no-log-init -r -g app app
 USER app
 COPY --from=build /go/bin/app /
+COPY swagger /swagger
 ENV APP_ADDR ":8080"
 EXPOSE 8080
 ENTRYPOINT ["/app"]
