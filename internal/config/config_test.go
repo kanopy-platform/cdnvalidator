@@ -81,6 +81,28 @@ entitlements:
 	err := config.parse([]byte(yamlString))
 	assert.NoError(t, err)
 
+	// assert Set
+	assert.Equal(t, &Distribution{ID: "123", Prefix: "/foo"}, config.distributions.Get("dis1"))
+	grp1, _ := config.entitlements.Get("grp1")
+	assert.Equal(t, []string{"dis1", "dis2"}, grp1)
+
+	// assert Delete
+	reducedYaml := `---
+distributions:
+  dis1:
+    id: "123"
+    prefix: "/foo"
+entitlements:
+  grp1:
+    - dis1
+    - dis2
+`
+	err = config.parse([]byte(reducedYaml))
+	assert.NoError(t, err)
+
+	assert.Nil(t, config.distributions.Get("dis2"))
+	grp1, ok := config.entitlements.Get("grp2")
+	assert.False(t, ok)
 }
 
 func TestLoad(t *testing.T) {

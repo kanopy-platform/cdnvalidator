@@ -33,7 +33,7 @@ func (c *Config) parse(data []byte) error {
 		Entitlements  entitlementsMap  `json:"entitlements"`
 	}{}
 
-	if err := yaml.Unmarshal(data, config); err != nil {
+	if err := yaml.Unmarshal(data, &config); err != nil {
 		return err
 	}
 
