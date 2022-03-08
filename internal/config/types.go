@@ -109,6 +109,7 @@ func (e *entitlements) Names() []string {
 }
 
 type Config struct {
+	mu            sync.Mutex
 	distributions distributions
 	entitlements  entitlements
 }

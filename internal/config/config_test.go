@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -86,8 +87,22 @@ entitlements:
 	grp1, _ := config.entitlements.Get("grp1")
 	assert.Equal(t, []string{"dis1", "dis2"}, grp1)
 
-	// assert Delete
-	reducedYaml := `---
+	// assert concurrent access to config
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+
+	go func() {
+		for {
+			if ctx.Err() != nil {
+				return
+			}
+			dists := config.DistributionsFromClaims([]string{"grp1"})
+			assert.Len(t, dists, 2)
+			assert.NotNil(t, config.Distribution("dis2"))
+		}
+	}()
+
+	newYaml := `---
 distributions:
   dis1:
     id: "123"
@@ -97,12 +112,9 @@ entitlements:
     - dis1
     - dis2
 `
-	err = config.parse([]byte(reducedYaml))
-	assert.NoError(t, err)
 
-	assert.Nil(t, config.distributions.Get("dis2"))
-	_, ok := config.entitlements.Get("grp2")
-	assert.False(t, ok)
+	err = config.parse([]byte(newYaml))
+	cancel()
 }
 
 func TestLoad(t *testing.T) {

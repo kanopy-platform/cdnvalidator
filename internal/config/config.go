@@ -42,23 +42,32 @@ func (c *Config) parse(data []byte) error {
 		return err
 	}
 
+	c.mu.Lock()
 	for name, value := range config.Distributions {
 		c.distributions.Set(name, value)
 	}
-	for _, name := range c.distributions.Names() {
-		if _, ok := config.Distributions[name]; !ok {
-			c.distributions.Delete(name)
-		}
-	}
-
 	for name, value := range config.Entitlements {
 		c.entitlements.Set(name, value)
 	}
-	for _, name := range c.entitlements.Names() {
-		if _, ok := config.Entitlements[name]; !ok {
-			c.entitlements.Delete(name)
-		}
-	}
+	c.mu.Unlock()
+
+	// for name, value := range config.Distributions {
+	// 	c.distributions.Set(name, value)
+	// }
+	// for _, name := range c.distributions.Names() {
+	// 	if _, ok := config.Distributions[name]; !ok {
+	// 		c.distributions.Delete(name)
+	// 	}
+	// }
+
+	// for name, value := range config.Entitlements {
+	// 	c.entitlements.Set(name, value)
+	// }
+	// for _, name := range c.entitlements.Names() {
+	// 	if _, ok := config.Entitlements[name]; !ok {
+	// 		c.entitlements.Delete(name)
+	// 	}
+	// }
 
 	return nil
 }
