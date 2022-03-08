@@ -25,7 +25,7 @@ type InvalidationResponse struct {
 	ID string `json:"id,omitempty"`
 
 	// The Created time of invalidation
-	Created time.Duration `json:"createTime"`
+	Created time.Time `json:"createTime"`
 
 	// The Paths array requested for invalidation
 	Paths []string `json:"paths,omitempty"`
@@ -67,6 +67,7 @@ type _ struct {
 const (
 	ResourceNotFoundErrorCode         = 404
 	InvalidationUnauthorizedErrorCode = 403
+	InternalServerError               = 500
 )
 
 var (

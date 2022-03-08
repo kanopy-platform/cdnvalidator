@@ -24,10 +24,13 @@ type Client struct {
 type CreateInvalidationOutput struct {
 	InvalidationId string
 	Status         string
+	CreateTime     time.Time
+	Paths          []string
 }
 
 type GetInvalidationOutput struct {
-	CreateTime time.Time
-	Status     string
-	Paths      []string
+	InvalidationId string
+	Status         string
+	CreateTime     time.Time
+	Paths          []string
 }

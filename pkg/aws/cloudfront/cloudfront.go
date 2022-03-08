@@ -100,6 +100,8 @@ func (c *Client) CreateInvalidation(ctx context.Context, distributionId string, 
 	response := &CreateInvalidationOutput{
 		InvalidationId: aws.ToString(invalidation.Id),
 		Status:         aws.ToString(invalidation.Status),
+		CreateTime:     aws.ToTime(invalidation.CreateTime),
+		Paths:          invalidation.InvalidationBatch.Paths.Items,
 	}
 
 	return response, nil
@@ -124,9 +126,10 @@ func (c *Client) GetInvalidation(ctx context.Context, distributionId string, inv
 	invalidation := *output.Invalidation
 
 	response := &GetInvalidationOutput{
-		CreateTime: aws.ToTime(invalidation.CreateTime),
-		Status:     aws.ToString(invalidation.Status),
-		Paths:      invalidation.InvalidationBatch.Paths.Items,
+		InvalidationId: aws.ToString(invalidation.Id),
+		Status:         aws.ToString(invalidation.Status),
+		CreateTime:     aws.ToTime(invalidation.CreateTime),
+		Paths:          invalidation.InvalidationBatch.Paths.Items,
 	}
 
 	return response, nil

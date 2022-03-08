@@ -11,13 +11,17 @@ type Option func(c *Client)
 
 func WithAwsRegion(region string) Option {
 	return func(c *Client) {
-		c.awsCfgOptions = append(c.awsCfgOptions, config.WithRegion(region))
+		if region != "" {
+			c.awsCfgOptions = append(c.awsCfgOptions, config.WithRegion(region))
+		}
 	}
 }
 
 func WithStaticCredentials(key string, secret string) Option {
 	return func(c *Client) {
-		c.awsCfgOptions = append(c.awsCfgOptions, config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(key, secret, "")))
+		if key != "" && secret != "" {
+			c.awsCfgOptions = append(c.awsCfgOptions, config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(key, secret, "")))
+		}
 	}
 }
 
