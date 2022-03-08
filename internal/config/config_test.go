@@ -114,6 +114,7 @@ entitlements:
 `
 
 	err = config.parse([]byte(newYaml))
+	assert.NoError(t, err)
 	cancel()
 }
 
