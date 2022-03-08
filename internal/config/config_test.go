@@ -15,10 +15,15 @@ import (
 func setupConfig() *Config {
 	config := New()
 
-	config.distributions.Set("dis1", &Distribution{ID: "123", Prefix: "/foo"})
-	config.distributions.Set("dis2", &Distribution{ID: "456", Prefix: "/bar"})
-	config.entitlements.Set("grp1", []string{"dis1", "dis2"})
-	config.entitlements.Set("grp2", []string{"dis2"})
+	// config.distributions.Set("dis1", &Distribution{ID: "123", Prefix: "/foo"})
+	// config.distributions.Set("dis2", &Distribution{ID: "456", Prefix: "/bar"})
+	// config.entitlements.Set("grp1", []string{"dis1", "dis2"})
+	// config.entitlements.Set("grp2", []string{"dis2"})
+
+	config.distributions["dis1"] = &Distribution{ID: "123", Prefix: "/foo"}
+	config.distributions["dis2"] = &Distribution{ID: "456", Prefix: "/bar"}
+	config.entitlements["grp1"] = []string{"dis1", "dis2"}
+	config.entitlements["grp2"] = []string{"dis2"}
 
 	return config
 }
@@ -83,8 +88,10 @@ entitlements:
 	assert.NoError(t, err)
 
 	// assert Set
-	assert.Equal(t, &Distribution{ID: "123", Prefix: "/foo"}, config.distributions.Get("dis1"))
-	grp1, _ := config.entitlements.Get("grp1")
+	// assert.Equal(t, &Distribution{ID: "123", Prefix: "/foo"}, config.distributions.Get("dis1"))
+	assert.Equal(t, &Distribution{ID: "123", Prefix: "/foo"}, config.distributions["dis1"])
+	// grp1, _ := config.entitlements.Get("grp1")
+	grp1, _ := config.entitlements["grp1"]
 	assert.Equal(t, []string{"dis1", "dis2"}, grp1)
 
 	// assert concurrent access to config
@@ -96,9 +103,11 @@ entitlements:
 			if ctx.Err() != nil {
 				return
 			}
-			dists := config.DistributionsFromClaims([]string{"grp1"})
-			assert.Len(t, dists, 2)
-			assert.NotNil(t, config.Distribution("dis2"))
+			// dists := config.DistributionsFromClaims([]string{"grp1"})
+			// assert.Len(t, dists, 2)
+			assert.NotNil(t, config.Distribution("dis1"))
+			assert.Nil(t, config.Distribution("dis2"))
+			// assert.NotNil(t, config.Distribution("dis2"))
 		}
 	}()
 
