@@ -7,10 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/kanopy-platform/cdnvalidator/internal/config"
 	"github.com/kanopy-platform/cdnvalidator/internal/core"
 	"github.com/kanopy-platform/cdnvalidator/pkg/aws/cloudfront"
-	"github.com/spf13/viper"
-	"honnef.co/go/tools/config" // TODO replace with Ricardo's
 )
 
 type DistributionService struct {
@@ -27,12 +26,7 @@ func New(opts ...Option) (*DistributionService, error) {
 	var err error
 
 	d := &DistributionService{
-		config:     config.New(),
-		configFile: viper.GetString("config-file"),
-		awsRegion:  viper.GetString("aws-region"),
-		awsKey:     viper.GetString("aws-key"),
-		awsSecret:  viper.GetString("aws-secret"),
-		awsTimeout: viper.GetDuration("aws-timeout"),
+		config: config.New(),
 	}
 
 	for _, opt := range opts {
@@ -90,9 +84,9 @@ func (d *DistributionService) List(ctx context.Context) (map[VanityDistributionN
 	ret := make(map[VanityDistributionName]Distribution)
 
 	distributions := d.config.DistributionsFromClaims(claims)
-	for _, name := range distributions {
+	for name := range distributions {
 		distribution := d.config.Distribution(name)
-		ret[name] = Distribution{distribution.ID, distribution.Prefix}
+		ret[VanityDistributionName(name)] = Distribution{distribution.ID, distribution.Prefix}
 	}
 
 	return ret, nil

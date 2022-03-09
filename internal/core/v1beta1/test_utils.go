@@ -60,7 +60,7 @@ func (f *Fake) GetInvalidationStatus(ctx context.Context, distributionName strin
 
 	return &InvalidationResponse{
 		ID:               "1",
-		Created:          time.Now(),
+		Created:          time.Now().Truncate(time.Hour),
 		InvalidationMeta: InvalidationMeta{Status: "Complete"},
 	}, nil
 }
