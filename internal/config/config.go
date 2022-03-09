@@ -28,18 +28,11 @@ func validateDistributions(distributions distributionsMap) error {
 }
 
 func validateEntitlements(entitlements entitlementsMap, distributions distributionsMap) error {
-	entitlementDistros := make(map[string]string)
-
-	// build lookup map, used also to deduplicate distribution names
 	for eName, distros := range entitlements {
 		for _, distro := range distros {
-			entitlementDistros[distro] = eName
-		}
-	}
-
-	for dName, eName := range entitlementDistros {
-		if _, ok := distributions[dName]; !ok {
-			return fmt.Errorf("error parsing configuration: distribution %s in entitlement %s is not configured", dName, eName)
+			if _, ok := distributions[distro]; !ok {
+				return fmt.Errorf("error parsing configuration: distribution %s in entitlement %s is not configured", distro, eName)
+			}
 		}
 	}
 
