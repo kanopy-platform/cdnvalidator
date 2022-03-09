@@ -66,21 +66,24 @@ func (c *Config) parse(data []byte) error {
 		return err
 	}
 
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	for name, value := range config.Distributions {
-		c.distributions.Set(name, value)
+		c.distributions[name] = value
 	}
-	for _, name := range c.distributions.Names() {
+	for name := range c.distributions {
 		if _, ok := config.Distributions[name]; !ok {
-			c.distributions.Delete(name)
+			delete(c.distributions, name)
 		}
 	}
 
 	for name, value := range config.Entitlements {
-		c.entitlements.Set(name, value)
+		c.entitlements[name] = value
 	}
-	for _, name := range c.entitlements.Names() {
+	for name := range c.entitlements {
 		if _, ok := config.Entitlements[name]; !ok {
-			c.entitlements.Delete(name)
+			delete(c.entitlements, name)
 		}
 	}
 
@@ -162,14 +165,18 @@ func (c *Config) watcher(filePath string, watcher *fsnotify.Watcher) {
 func (c *Config) DistributionsFromClaims(claims []string) map[string]bool {
 	lookup := make(map[string]bool)
 
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	for _, claim := range claims {
-		if distros, ok := c.entitlements.Get(claim); ok {
+		if distros, ok := c.entitlements[claim]; ok {
 			for _, distro := range distros {
-				if d := c.distributions.Get(distro); d != nil {
+				if d := c.distributions[distro]; d != nil {
 					lookup[distro] = true
 				}
 			}
 		}
+
 	}
 
 	return lookup
@@ -177,5 +184,15 @@ func (c *Config) DistributionsFromClaims(claims []string) map[string]bool {
 
 // Distribution returns a specific Distribution by name
 func (c *Config) Distribution(name string) *Distribution {
-	return c.distributions.Get(name)
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if entry, ok := c.distributions[name]; ok {
+		return &Distribution{
+			ID:     entry.ID,
+			Prefix: entry.Prefix,
+		}
+	}
+
+	return nil
 }
