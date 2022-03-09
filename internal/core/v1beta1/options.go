@@ -23,8 +23,8 @@ func WithAwsStaticCredentials(key string, secret string) Option {
 	}
 }
 
-func WithAwsTimeout(t time.Duration) Option {
+func WithTimeout(t time.Duration) Option {
 	return func(ds *DistributionService) {
-		ds.awsTimeout = t
+		ds.timeout = t
 	}
 }

@@ -19,14 +19,15 @@ type DistributionService struct {
 	awsRegion  string
 	awsKey     string
 	awsSecret  string
-	awsTimeout time.Duration
+	timeout    time.Duration
 }
 
 func New(opts ...Option) (*DistributionService, error) {
 	var err error
 
 	d := &DistributionService{
-		config: config.New(),
+		config:  config.New(),
+		timeout: 30 * time.Second,
 	}
 
 	for _, opt := range opts {
@@ -34,15 +35,17 @@ func New(opts ...Option) (*DistributionService, error) {
 	}
 
 	// set up config
-	if err := d.config.Watch(d.configFile); err != nil {
-		return nil, err
+	if d.configFile != "" {
+		if err := d.config.Watch(d.configFile); err != nil {
+			return nil, err
+		}
 	}
 
 	// set up AWS Cloudfront client
 	cfOpts := []cloudfront.Option{
 		cloudfront.WithAwsRegion(d.awsRegion),
 		cloudfront.WithStaticCredentials(d.awsKey, d.awsSecret),
-		cloudfront.WithTimeout(d.awsTimeout),
+		cloudfront.WithTimeout(d.timeout),
 	}
 
 	d.cloudfront, err = cloudfront.New(cfOpts...)

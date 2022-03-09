@@ -15,10 +15,7 @@ func New(opts ...Option) (*Client, error) {
 	client := &Client{}
 
 	// default options
-	o := []Option{
-		WithAwsRegion("us-east-1"),
-		WithTimeout(30 * time.Second),
-	}
+	o := []Option{}
 
 	opts = append(o, opts...)
 

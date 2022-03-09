@@ -19,6 +19,11 @@ import (
 type Server struct {
 	router         *mux.Router
 	authCookieName string
+	configFile     string
+	awsRegion      string
+	awsKey         string
+	awsSecret      string
+	timeout        time.Duration
 }
 
 func New(opts ...Option) (http.Handler, error) {
@@ -40,7 +45,16 @@ func New(opts ...Option) (http.Handler, error) {
 	authmiddleware := authorization.New(authorization.WithCookieName(s.authCookieName),
 		authorization.WithAuthorizationHeader())
 
-	api := v1beta1.New(s.router)
+	api, err := v1beta1.New(s.router,
+		v1beta1.WithConfigFile(s.configFile),
+		v1beta1.WithAwsRegion(s.awsRegion),
+		v1beta1.WithAwsStaticCredentials(s.awsKey, s.awsSecret),
+		v1beta1.WithTimeout(s.timeout),
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	api.Use(authmiddleware)
 
 	return s.router, nil
