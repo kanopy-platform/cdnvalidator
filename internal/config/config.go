@@ -62,22 +62,14 @@ func (c *Config) parse(data []byte) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	c.distributions = make(distributionsMap)
 	for name, value := range config.Distributions {
 		c.distributions[name] = value
 	}
-	for name := range c.distributions {
-		if _, ok := config.Distributions[name]; !ok {
-			delete(c.distributions, name)
-		}
-	}
 
+	c.entitlements = make(entitlementsMap)
 	for name, value := range config.Entitlements {
 		c.entitlements[name] = value
-	}
-	for name := range c.entitlements {
-		if _, ok := config.Entitlements[name]; !ok {
-			delete(c.entitlements, name)
-		}
 	}
 
 	return nil
