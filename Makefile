@@ -8,7 +8,7 @@ PKG ?= ./...
 .PHONY: test
 test: ## Run tests in local environment
 	golangci-lint run --timeout=5m $(PKG)
-	go test -short -cover -run=$(RUN) $(PKG)
+	go test -short -cover -race -run=$(RUN) $(PKG)
 
 .PHONY: test-integration
 test-integration: ## Run integration tests
