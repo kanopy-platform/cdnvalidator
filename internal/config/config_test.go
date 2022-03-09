@@ -130,11 +130,8 @@ entitlements:
 	err := config.parse([]byte(yamlString))
 	assert.NoError(t, err)
 
-	// assert Set
-	// assert.Equal(t, &Distribution{ID: "123", Prefix: "/foo"}, config.distributions.Get("dis1"))
 	assert.Equal(t, &Distribution{ID: "123", Prefix: "/foo"}, config.distributions["dis1"])
-	// grp1, _ := config.entitlements.Get("grp1")
-	grp1, _ := config.entitlements["grp1"]
+	grp1 := config.entitlements["grp1"]
 	assert.Equal(t, []string{"dis1", "dis2"}, grp1)
 
 	// assert concurrent access to config
