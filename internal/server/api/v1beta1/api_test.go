@@ -189,7 +189,7 @@ func TestGetInvalidation(t *testing.T) {
 			invalidID: "id",
 			wantCode:  200,
 			wantResponse: v1beta1.InvalidationResponse{
-				Created: time.Unix(0, 0),
+				Created: time.Unix(0, 0).UTC(),
 				ID:      "1",
 				InvalidationMeta: v1beta1.InvalidationMeta{
 					Status: "Complete",
