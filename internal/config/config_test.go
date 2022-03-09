@@ -125,7 +125,7 @@ entitlements:
     - dis1
     - dis2
   grp2:
-    - dis3
+    - dis2
 `
 	err := config.parse([]byte(yamlString))
 	assert.NoError(t, err)
@@ -144,7 +144,6 @@ distributions:
 entitlements:
   grp1:
     - dis1
-    - dis2
 `
 	err = config.parse([]byte(reducedYaml))
 	assert.NoError(t, err)
