@@ -60,6 +60,55 @@ func TestValidateDistributions(t *testing.T) {
 	}
 }
 
+func TestValidateEntitlements(t *testing.T) {
+	distributions := distributionsMap{
+		"dis1": {
+			ID:     "123",
+			Prefix: "/foo",
+		},
+		"dis2": {
+			ID:     "456",
+			Prefix: "/bar",
+		},
+	}
+
+	tests := []struct {
+		distributions distributionsMap
+		entitlements  entitlementsMap
+		want          error
+	}{
+		{
+			distributions: distributions,
+			entitlements: entitlementsMap{
+				"grp1": {
+					"dis1",
+				},
+				"grp2": {
+					"dis2",
+				},
+			},
+			want: nil,
+		},
+		{
+			distributions: distributions,
+			entitlements: entitlementsMap{
+				"grp1": {
+					"dis1",
+					"dis2",
+				},
+				"grp2": {
+					"dis3",
+				},
+			},
+			want: errors.New("error parsing configuration: distribution dis3 in entitlement grp2 is not configured"),
+		},
+	}
+
+	for _, test := range tests {
+		assert.Equal(t, test.want, validateEntitlements(test.entitlements, test.distributions))
+	}
+}
+
 func TestParse(t *testing.T) {
 	config := New()
 

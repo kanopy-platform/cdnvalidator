@@ -27,6 +27,25 @@ func validateDistributions(distributions distributionsMap) error {
 	return nil
 }
 
+func validateEntitlements(entitlements entitlementsMap, distributions distributionsMap) error {
+	entitlementDistros := make(map[string]string)
+
+	// build lookup map, used also to deduplicate distribution names
+	for eName, distros := range entitlements {
+		for _, distro := range distros {
+			entitlementDistros[distro] = eName
+		}
+	}
+
+	for dName, eName := range entitlementDistros {
+		if _, ok := distributions[dName]; !ok {
+			return fmt.Errorf("error parsing configuration: distribution %s in entitlement %s is not configured", dName, eName)
+		}
+	}
+
+	return nil
+}
+
 func (c *Config) parse(data []byte) error {
 	config := struct {
 		Distributions distributionsMap `json:"distributions"`
@@ -38,6 +57,11 @@ func (c *Config) parse(data []byte) error {
 	}
 
 	err := validateDistributions(config.Distributions)
+	if err != nil {
+		return err
+	}
+
+	err = validateEntitlements(config.Entitlements, config.Distributions)
 	if err != nil {
 		return err
 	}
