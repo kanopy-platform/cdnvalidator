@@ -142,6 +142,8 @@ func (c *Config) DistributionsFromClaims(claims []string) map[string]bool {
 	lookup := make(map[string]bool)
 
 	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	for _, claim := range claims {
 		if distros, ok := c.entitlements[claim]; ok {
 			for _, distro := range distros {
@@ -152,7 +154,6 @@ func (c *Config) DistributionsFromClaims(claims []string) map[string]bool {
 		}
 
 	}
-	c.mu.Unlock()
 
 	return lookup
 }
