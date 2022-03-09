@@ -11,8 +11,17 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+func emptyConfig() *Config {
+	config := &Config{}
+
+	config.distributions = make(distributionsMap)
+	config.entitlements = make(entitlementsMap)
+
+	return config
+}
+
 func setupConfig() *Config {
-	config := New()
+	config := emptyConfig()
 
 	config.distributions["dis1"] = &Distribution{ID: "123", Prefix: "/foo"}
 	config.distributions["dis2"] = &Distribution{ID: "456", Prefix: "/bar"}
@@ -110,7 +119,7 @@ func TestValidateEntitlements(t *testing.T) {
 }
 
 func TestParse(t *testing.T) {
-	config := New()
+	config := emptyConfig()
 
 	yamlString := `---
 distributions:
@@ -165,7 +174,7 @@ entitlements:
 }
 
 func TestLoad(t *testing.T) {
-	config := New()
+	config := emptyConfig()
 
 	tmpFile, err := ioutil.TempFile(os.TempDir(), "cdnvalidator-")
 	assert.NoError(t, err)

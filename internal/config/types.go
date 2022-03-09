@@ -26,11 +26,3 @@ type Config struct {
 	distributions distributionsMap
 	entitlements  entitlementsMap
 }
-
-func New() *Config {
-	config := &Config{}
-	config.distributions = make(distributionsMap)
-	config.entitlements = make(entitlementsMap)
-
-	return config
-}
