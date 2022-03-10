@@ -74,6 +74,10 @@ func (d *DistributionService) List(ctx context.Context) ([]string, error) {
 }
 
 func (d *DistributionService) CreateInvalidation(ctx context.Context, distributionName string, paths []string) (*InvalidationResponse, error) {
+	if len(paths) == 0 {
+		return nil, NewInvalidationError(InternalServerError, fmt.Errorf("invalid path"), errors.New("must provide at least one path"))
+	}
+
 	distribution, err := d.getDistribution(ctx, distributionName)
 	if err != nil {
 		return nil, err

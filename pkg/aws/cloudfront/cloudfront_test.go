@@ -2,113 +2,54 @@ package cloudfront
 
 import (
 	"context"
+	"errors"
 	"flag"
-	"fmt"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	cf "github.com/aws/aws-sdk-go-v2/service/cloudfront"
-	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-type mockCloudFrontClient struct {
-	returnError     bool
-	createTime      time.Time
-	paths           []string
-	distributionId  string
-	invalidationId  string
-	callerReference string
-	status          string
-}
-
-func (m *mockCloudFrontClient) CreateInvalidation(ctx context.Context, params *cf.CreateInvalidationInput, optFns ...func(*cf.Options)) (*cf.CreateInvalidationOutput, error) {
-	if m.returnError {
-		return nil, fmt.Errorf("mock cloudfront error")
-	}
-
-	output := &cf.CreateInvalidationOutput{
-		Invalidation: &types.Invalidation{
-			CreateTime: aws.Time(m.createTime),
-			Id:         aws.String(m.invalidationId),
-			InvalidationBatch: &types.InvalidationBatch{
-				CallerReference: aws.String(m.callerReference),
-				Paths: &types.Paths{
-					Items:    m.paths,
-					Quantity: aws.Int32(int32(len(m.paths))),
-				},
-			},
-			Status: aws.String(m.status),
-		},
-		Location: aws.String(""),
-	}
-
-	return output, nil
-}
-
-func (m *mockCloudFrontClient) GetInvalidation(ctx context.Context, params *cf.GetInvalidationInput, optFns ...func(*cf.Options)) (*cf.GetInvalidationOutput, error) {
-	if m.returnError {
-		return nil, fmt.Errorf("mock cloudfront error")
-	}
-
-	output := &cf.GetInvalidationOutput{
-		Invalidation: &types.Invalidation{
-			CreateTime: aws.Time(m.createTime),
-			Id:         aws.String(m.invalidationId),
-			InvalidationBatch: &types.InvalidationBatch{
-				CallerReference: aws.String(m.callerReference),
-				Paths: &types.Paths{
-					Items:    m.paths,
-					Quantity: aws.Int32(int32(len(m.paths))),
-				},
-			},
-			Status: aws.String(m.status),
-		},
-	}
-
-	return output, nil
-}
-
-func newMockClient(cfClient cfClientAPI) *Client {
-	return &Client{
-		cfClient: cfClient,
-	}
-}
-
 func TestCreateInvalidation(t *testing.T) {
 	t.Parallel()
 
-	tests := []*mockCloudFrontClient{
+	tests := []struct {
+		distributionId string
+		paths          []string
+		cfClient       *MockCloudFrontClient
+	}{
 		{
 			// error response from cloudfront
-			returnError: true,
+			distributionId: "ABCD1234ABCDEF",
+			paths:          []string{"/*"},
+			cfClient:       &MockCloudFrontClient{Err: errors.New("mock cloudfront error")},
 		},
 		{
 			// success
-			returnError:     false,
-			createTime:      time.Now(),
-			paths:           []string{"/docs", "/docs-qa"},
-			distributionId:  "ABCD1234ABCDEF",
-			invalidationId:  "I1JEZI55SHT2W3",
-			callerReference: currentTimeSeconds(),
-			status:          "Completed",
+			distributionId: "ABCD1234ABCDEF",
+			paths:          []string{"/docs", "/docs-qa"},
+			cfClient: &MockCloudFrontClient{
+				Err:            errors.New("mock cloudfront error"),
+				CreateTime:     time.Now(),
+				InvalidationId: "I1JEZI55SHT2W3",
+				Status:         "Completed",
+			},
 		},
 	}
 
 	for _, test := range tests {
-		client := newMockClient(test)
+		client := NewTestCloudfrontClient(test.cfClient)
 
 		output, err := client.CreateInvalidation(context.Background(), test.distributionId, test.paths)
-		if test.returnError {
+		if test.cfClient.Err != nil {
 			assert.Error(t, err)
 		} else {
 			assert.NoError(t, err)
-			assert.Equal(t, test.invalidationId, output.InvalidationId)
-			assert.Equal(t, test.status, output.Status)
+			assert.Equal(t, test.cfClient.InvalidationId, output.InvalidationId)
+			assert.Equal(t, test.cfClient.Status, output.Status)
 		}
 	}
 }
@@ -116,33 +57,40 @@ func TestCreateInvalidation(t *testing.T) {
 func TestGetInvalidation(t *testing.T) {
 	t.Parallel()
 
-	tests := []*mockCloudFrontClient{
+	tests := []struct {
+		distributionId string
+		invalidationId string
+		cfClient       *MockCloudFrontClient
+	}{
 		{
 			// error response from cloudfront
-			returnError: true,
+			distributionId: "ABCD1234ABCDEF",
+			invalidationId: "I1JEZI55SHT2W3",
+			cfClient:       &MockCloudFrontClient{Err: errors.New("mock cloudfront error")},
 		},
 		{
 			// success
-			returnError:    false,
-			createTime:     time.Now(),
-			paths:          []string{"/docs", "/docs-qa"},
 			distributionId: "ABCD1234ABCDEF",
 			invalidationId: "I1JEZI55SHT2W3",
-			status:         "Completed",
+			cfClient: &MockCloudFrontClient{
+				Err:        errors.New("mock cloudfront error"),
+				CreateTime: time.Now(),
+				Status:     "Completed",
+				Paths:      []string{"/docs", "/docs-qa"},
+			},
 		},
 	}
-
 	for _, test := range tests {
-		client := newMockClient(test)
+		client := NewTestCloudfrontClient(test.cfClient)
 
 		output, err := client.GetInvalidation(context.Background(), test.distributionId, test.invalidationId)
-		if test.returnError {
+		if test.cfClient.Err != nil {
 			assert.Error(t, err)
 		} else {
 			assert.NoError(t, err)
-			assert.Equal(t, test.createTime, output.CreateTime)
-			assert.Equal(t, test.status, output.Status)
-			assert.Equal(t, test.paths, output.Paths)
+			assert.Equal(t, test.cfClient.CreateTime, output.CreateTime)
+			assert.Equal(t, test.cfClient.Status, output.Status)
+			assert.Equal(t, test.cfClient.Paths, output.Paths)
 		}
 	}
 }
