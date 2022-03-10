@@ -9,7 +9,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/kanopy-platform/cdnvalidator/internal/config"
 	"github.com/kanopy-platform/cdnvalidator/internal/server"
+	"github.com/kanopy-platform/cdnvalidator/pkg/aws/cloudfront"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -30,6 +32,7 @@ func NewRootCommand() *cobra.Command {
 	cmd.PersistentFlags().String("listen-address", ":8080", "Server listen address")
 	cmd.PersistentFlags().String("auth-cookie", "", "Auth cookie name")
 	cmd.PersistentFlags().String("config-file", "", "Configuration file name")
+	// TODO look to see if AWS has a config set flag like k8s
 	cmd.PersistentFlags().String("aws-region", "us-east-1", "AWS region for Cloudfront")
 	cmd.PersistentFlags().String("aws-key", "", "AWS static credential key for Cloudfront")
 	cmd.PersistentFlags().String("aws-secret", "", "AWS static credential secret for Cloudfront")
@@ -64,15 +67,28 @@ func (c *RootCommand) runE(cmd *cobra.Command, args []string) error {
 
 	log.Printf("Starting server on %s\n", addr)
 
-	opts := []server.Option{
-		server.WithAuthCookieName(viper.GetString("auth-cookie")),
-		server.WithConfigFile(viper.GetString("config-file")),
-		server.WithAwsRegion(viper.GetString("aws-region")),
-		server.WithAwsStaticCredentials(viper.GetString("aws-key"), viper.GetString("aws-secret")),
-		server.WithTimeout(viper.GetDuration("timeout")),
+	// build config
+	config := config.New()
+	if viper.GetString("config-file") != "" {
+		if err := config.Watch(viper.GetString("config-file")); err != nil {
+			return err
+		}
 	}
 
-	s, err := server.New(opts...)
+	// build cloudfront client
+	cloudfrontClient, err := cloudfront.New(
+		cloudfront.WithAwsRegion(viper.GetString("aws-region")),
+		cloudfront.WithStaticCredentials(viper.GetString("aws-key"), viper.GetString("aws-secret")),
+		cloudfront.WithTimeout(viper.GetDuration("timeout")),
+	)
+	if err != nil {
+		return err
+	}
+
+	s, err := server.New(
+		server.WithConfig(config),
+		server.WithCloudfrontClient(cloudfrontClient),
+	)
 	if err != nil {
 		return err
 	}

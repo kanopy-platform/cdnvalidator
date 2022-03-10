@@ -17,18 +17,15 @@ func NewFake() *Fake {
 
 }
 
-func (f *Fake) List(ctx context.Context) (map[VanityDistributionName]Distribution, error) {
+func (f *Fake) List(ctx context.Context) ([]string, error) {
 	claims := core.GetClaims(ctx)
 	if len(claims) == 0 {
 		return nil, errors.New("no claims present")
 	}
 
 	if claims[0] == "gr1" {
-		return map[VanityDistributionName]Distribution{
-			"f1": {
-				DistributionID: "d1",
-				PathPrefix:     "/",
-			},
+		return []string{
+			"f1",
 		}, nil
 	}
 

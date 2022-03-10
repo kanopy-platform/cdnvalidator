@@ -10,6 +10,7 @@ import (
 
 	"github.com/felixge/httpsnoop"
 	"github.com/gorilla/mux"
+	v1beta1_ds "github.com/kanopy-platform/cdnvalidator/internal/core/v1beta1"
 	"github.com/kanopy-platform/cdnvalidator/internal/server/api/v1beta1"
 	"github.com/kanopy-platform/cdnvalidator/internal/server/middleware/authorization"
 	"github.com/kanopy-platform/cdnvalidator/pkg/http/prometheus"
@@ -19,11 +20,7 @@ import (
 type Server struct {
 	router         *mux.Router
 	authCookieName string
-	configFile     string
-	awsRegion      string
-	awsKey         string
-	awsSecret      string
-	timeout        time.Duration
+	apiOptions     []v1beta1_ds.Option
 }
 
 func New(opts ...Option) (http.Handler, error) {
@@ -46,10 +43,7 @@ func New(opts ...Option) (http.Handler, error) {
 		authorization.WithAuthorizationHeader())
 
 	api, err := v1beta1.New(s.router,
-		v1beta1.WithConfigFile(s.configFile),
-		v1beta1.WithAwsRegion(s.awsRegion),
-		v1beta1.WithAwsStaticCredentials(s.awsKey, s.awsSecret),
-		v1beta1.WithTimeout(s.timeout),
+		s.apiOptions...,
 	)
 	if err != nil {
 		return nil, err

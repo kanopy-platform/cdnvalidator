@@ -13,13 +13,8 @@ const ErrUserNotEntitled = "User is not entitled to the CloudFront Invalidation 
 
 const PathPrefix = "/api/v1beta1"
 
-func New(router *mux.Router, opts ...Option) (*mux.Router, error) {
-	options := &Options{}
-	for _, opt := range opts {
-		opt(options)
-	}
-
-	ds, err := v1beta1.New(options.distributionServiceOptions...)
+func New(router *mux.Router, opts ...v1beta1.Option) (*mux.Router, error) {
+	ds, err := v1beta1.New(opts...)
 	if err != nil {
 		return nil, err
 	}

@@ -1,41 +1,23 @@
 package server
 
-import "time"
+import (
+	"github.com/kanopy-platform/cdnvalidator/internal/config"
+	"github.com/kanopy-platform/cdnvalidator/internal/core/v1beta1"
+	"github.com/kanopy-platform/cdnvalidator/pkg/aws/cloudfront"
+)
 
 type Option func(*Server) error
 
-func WithAuthCookieName(name string) Option {
+func WithConfig(c *config.Config) Option {
 	return func(s *Server) error {
-		s.authCookieName = name
+		s.apiOptions = append(s.apiOptions, v1beta1.WithConfig(c))
 		return nil
 	}
 }
 
-func WithConfigFile(name string) Option {
+func WithCloudfrontClient(c *cloudfront.Client) Option {
 	return func(s *Server) error {
-		s.configFile = name
-		return nil
-	}
-}
-
-func WithAwsRegion(region string) Option {
-	return func(s *Server) error {
-		s.awsRegion = region
-		return nil
-	}
-}
-
-func WithAwsStaticCredentials(key string, secret string) Option {
-	return func(s *Server) error {
-		s.awsKey = key
-		s.awsSecret = secret
-		return nil
-	}
-}
-
-func WithTimeout(t time.Duration) Option {
-	return func(s *Server) error {
-		s.timeout = t
+		s.apiOptions = append(s.apiOptions, v1beta1.WithCloudfrontClient(c))
 		return nil
 	}
 }

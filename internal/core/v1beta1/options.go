@@ -1,30 +1,20 @@
 package v1beta1
 
-import "time"
+import (
+	"github.com/kanopy-platform/cdnvalidator/internal/config"
+	"github.com/kanopy-platform/cdnvalidator/pkg/aws/cloudfront"
+)
 
 type Option func(ds *DistributionService)
 
-func WithConfigFile(name string) Option {
+func WithConfig(c *config.Config) Option {
 	return func(ds *DistributionService) {
-		ds.configFile = name
+		ds.config = c
 	}
 }
 
-func WithAwsRegion(region string) Option {
+func WithCloudfrontClient(c *cloudfront.Client) Option {
 	return func(ds *DistributionService) {
-		ds.awsRegion = region
-	}
-}
-
-func WithAwsStaticCredentials(key string, secret string) Option {
-	return func(ds *DistributionService) {
-		ds.awsKey = key
-		ds.awsSecret = secret
-	}
-}
-
-func WithTimeout(t time.Duration) Option {
-	return func(ds *DistributionService) {
-		ds.timeout = t
+		ds.cloudfront = c
 	}
 }

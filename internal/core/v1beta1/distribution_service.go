@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"path"
 	"strings"
-	"time"
 
 	"github.com/kanopy-platform/cdnvalidator/internal/config"
 	"github.com/kanopy-platform/cdnvalidator/internal/core"
@@ -15,43 +14,24 @@ import (
 
 type DistributionService struct {
 	config     *config.Config
-	configFile string
 	cloudfront *cloudfront.Client
-	awsRegion  string
-	awsKey     string
-	awsSecret  string
-	timeout    time.Duration
 }
 
 func New(opts ...Option) (*DistributionService, error) {
 	var err error
 
+	defaultCloudfront, err := cloudfront.New()
+	if err != nil {
+		return nil, err
+	}
+
 	d := &DistributionService{
-		config:  config.New(),
-		timeout: 30 * time.Second,
+		config:     config.New(),
+		cloudfront: defaultCloudfront,
 	}
 
 	for _, opt := range opts {
 		opt(d)
-	}
-
-	// set up config
-	if d.configFile != "" {
-		if err := d.config.Watch(d.configFile); err != nil {
-			return nil, err
-		}
-	}
-
-	// set up AWS Cloudfront client
-	cfOpts := []cloudfront.Option{
-		cloudfront.WithAwsRegion(d.awsRegion),
-		cloudfront.WithStaticCredentials(d.awsKey, d.awsSecret),
-		cloudfront.WithTimeout(d.timeout),
-	}
-
-	d.cloudfront, err = cloudfront.New(cfOpts...)
-	if err != nil {
-		return nil, err
 	}
 
 	return d, nil
@@ -77,18 +57,17 @@ func (d *DistributionService) getDistribution(ctx context.Context, distributionN
 	return distribution, nil
 }
 
-func (d *DistributionService) List(ctx context.Context) (map[VanityDistributionName]Distribution, error) {
+func (d *DistributionService) List(ctx context.Context) ([]string, error) {
 	claims := core.GetClaims(ctx)
 	if len(claims) == 0 {
 		return nil, errors.New("no claims present")
 	}
 
-	ret := make(map[VanityDistributionName]Distribution)
-
 	distributions := d.config.DistributionsFromClaims(claims)
+
+	ret := make([]string, 0, len(distributions))
 	for name := range distributions {
-		distribution := d.config.Distribution(name)
-		ret[VanityDistributionName(name)] = Distribution{distribution.ID, distribution.Prefix}
+		ret = append(ret, name)
 	}
 
 	return ret, nil
@@ -101,17 +80,17 @@ func (d *DistributionService) CreateInvalidation(ctx context.Context, distributi
 	}
 
 	// prepend prefix to all the paths
-	distributionPaths := make([]string, 0)
+	absolutePaths := make([]string, 0, len(paths))
 	for _, p := range paths {
 		// prevent users from doing funny business by going up a directory
 		if strings.Contains(p, "../") {
 			return nil, NewInvalidationError(InternalServerError, fmt.Errorf("invalid path"), errors.New("path cannot contain ../"))
 		}
 
-		distributionPaths = append(distributionPaths, path.Join(distribution.Prefix, p))
+		absolutePaths = append(absolutePaths, path.Join(distribution.Prefix, p))
 	}
 
-	res, err := d.cloudfront.CreateInvalidation(ctx, distribution.ID, distributionPaths)
+	res, err := d.cloudfront.CreateInvalidation(ctx, distribution.ID, absolutePaths)
 	if err != nil {
 		return nil, NewInvalidationError(InternalServerError, fmt.Errorf("cloudfront CreateInvalidation failed"), err)
 	}
