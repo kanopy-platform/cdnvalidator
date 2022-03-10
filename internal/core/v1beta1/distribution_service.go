@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path"
 	"strings"
 	"time"
 
@@ -62,17 +63,15 @@ func (d *DistributionService) getDistribution(ctx context.Context, distributionN
 		return nil, errors.New("no claims present")
 	}
 
-	// check user is entitled to the distributionName
-	entitlements := d.config.DistributionsFromClaims(claims)
 	distribution := d.config.Distribution(distributionName)
+	if distribution == nil {
+		return nil, NewInvalidationError(ResourceNotFoundErrorCode, fmt.Errorf("distribution %s not found", distributionName), distributionName)
+	}
 
-	if _, ok := entitlements[distributionName]; !ok {
-		if distribution != nil {
-			// distribution exists but user is not entitled to it
-			return nil, NewInvalidationError(InvalidationUnauthorizedErrorCode, fmt.Errorf("distribution unauthorized"), distributionName)
-		} else {
-			return nil, NewInvalidationError(ResourceNotFoundErrorCode, fmt.Errorf("distribution %s not found", distributionName), distributionName)
-		}
+	// check user is entitled to the distributionName
+	entitledDistributions := d.config.DistributionsFromClaims(claims)
+	if _, ok := entitledDistributions[distributionName]; !ok {
+		return nil, NewInvalidationError(InvalidationUnauthorizedErrorCode, fmt.Errorf("distribution unauthorized"), distributionName)
 	}
 
 	return distribution, nil
@@ -101,19 +100,18 @@ func (d *DistributionService) CreateInvalidation(ctx context.Context, distributi
 		return nil, err
 	}
 
-	// check paths are valid
-	invalidPaths := make([]string, 0)
-
-	for _, path := range paths {
-		if !strings.HasPrefix(path, distribution.Prefix) {
-			invalidPaths = append(invalidPaths, path)
+	// prepend prefix to all the paths
+	distributionPaths := make([]string, 0)
+	for _, p := range paths {
+		// prevent users from doing funny business by going up a directory
+		if strings.Contains(p, "../") {
+			return nil, NewInvalidationError(InternalServerError, fmt.Errorf("invalid path"), errors.New("path cannot contain ../"))
 		}
-	}
-	if len(invalidPaths) > 0 {
-		return nil, NewInvalidationError(InvalidationUnauthorizedErrorCode, fmt.Errorf("paths unauthorized"), invalidPaths)
+
+		distributionPaths = append(distributionPaths, path.Join(distribution.Prefix, p))
 	}
 
-	res, err := d.cloudfront.CreateInvalidation(ctx, distribution.ID, paths)
+	res, err := d.cloudfront.CreateInvalidation(ctx, distribution.ID, distributionPaths)
 	if err != nil {
 		return nil, NewInvalidationError(InternalServerError, fmt.Errorf("cloudfront CreateInvalidation failed"), err)
 	}
