@@ -52,18 +52,21 @@ func TestGetDistribution(t *testing.T) {
 		err  error
 	}{
 		{
+			// success
 			claims:           []string{"grp1"},
 			distributionName: "dis1",
 			want:             &config.Distribution{ID: "123", Prefix: "/foo"},
 			err:              nil,
 		},
 		{
+			// non existant distribution
 			claims:           []string{"grp1"},
 			distributionName: "dis3",
 			want:             nil,
 			err:              NewInvalidationError(ResourceNotFoundErrorCode, errors.New("distribution dis3 not found"), "dis3"),
 		},
 		{
+			// user claim is not entitled to distribution
 			claims:           []string{"grp2"},
 			distributionName: "dis1",
 			want:             nil,
@@ -99,21 +102,25 @@ func TestList(t *testing.T) {
 		err  error
 	}{
 		{
+			// success
 			claims: []string{"grp1"},
 			want:   []string{"dis1", "dis2"},
 			err:    nil,
 		},
 		{
+			// success
 			claims: []string{"grp2"},
 			want:   []string{"dis2"},
 			err:    nil,
 		},
 		{
+			// empty claims
 			claims: []string{},
 			want:   []string{},
 			err:    errors.New("no claims present"),
 		},
 		{
+			// claim doesn't exist in entitlement but expect back empty list
 			claims: []string{"grp3"},
 			want:   []string{},
 			err:    nil,

@@ -32,8 +32,7 @@ func NewRootCommand() *cobra.Command {
 	cmd.PersistentFlags().String("listen-address", ":8080", "Server listen address")
 	cmd.PersistentFlags().String("auth-cookie", "", "Auth cookie name")
 	cmd.PersistentFlags().String("config-file", "", "Configuration file name")
-	// TODO look to see if AWS has a config set flag like k8s
-	cmd.PersistentFlags().String("aws-region", "us-east-1", "AWS region for Cloudfront")
+	cmd.PersistentFlags().String("aws-region", "", "AWS region for Cloudfront")
 	cmd.PersistentFlags().String("aws-key", "", "AWS static credential key for Cloudfront")
 	cmd.PersistentFlags().String("aws-secret", "", "AWS static credential secret for Cloudfront")
 	cmd.PersistentFlags().String("timeout", "30s", "Timeout")
