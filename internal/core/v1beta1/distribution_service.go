@@ -103,7 +103,7 @@ func (d *DistributionService) CreateInvalidation(ctx context.Context, distributi
 		InvalidationMeta: InvalidationMeta{
 			Status: res.Status,
 		},
-		ID:      res.InvalidationId,
+		ID:      res.InvalidationID,
 		Created: res.CreateTime,
 		Paths:   res.Paths,
 	}, nil
@@ -124,7 +124,7 @@ func (d *DistributionService) GetInvalidationStatus(ctx context.Context, distrib
 		InvalidationMeta: InvalidationMeta{
 			Status: res.Status,
 		},
-		ID:      res.InvalidationId,
+		ID:      res.InvalidationID,
 		Created: res.CreateTime,
 		Paths:   res.Paths,
 	}, nil

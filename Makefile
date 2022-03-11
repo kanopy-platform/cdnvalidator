@@ -1,6 +1,7 @@
 GO_MODULE := $(shell git config --get remote.origin.url | grep -o 'github\.com[:/][^.]*' | tr ':' '/')
 CMD_NAME := $(shell basename ${GO_MODULE})
 DEFAULT_APP_PORT ?= 8080
+DEFAULT_CONFIG_FILE := config/example_config.yaml
 ENV_VARIABLES := -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN # ENV to pass into container
 SWAGGER := docker run --rm -it -e GOPATH=${GOPATH}:/go -v ${HOME}:${HOME} -w ${PWD} quay.io/goswagger/swagger
 
@@ -36,7 +37,7 @@ docker:
 
 .PHONY: docker-run
 docker-run: docker ## Build and run the application in a local docker container
-	@docker run -p ${DEFAULT_APP_PORT}:${DEFAULT_APP_PORT} ${ENV_VARIABLES} $(CMD_NAME):latest
+	@docker run -p ${DEFAULT_APP_PORT}:${DEFAULT_APP_PORT} ${ENV_VARIABLES} $(CMD_NAME):latest --config-file=${DEFAULT_CONFIG_FILE}
 
 
 .PHONY: swagger-gen

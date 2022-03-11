@@ -48,7 +48,7 @@ func TestCreateInvalidation(t *testing.T) {
 			assert.Error(t, err)
 		} else {
 			assert.NoError(t, err)
-			assert.Equal(t, test.cfClient.InvalidationId, output.InvalidationId)
+			assert.Equal(t, test.cfClient.InvalidationId, output.InvalidationID)
 			assert.Equal(t, test.cfClient.Status, output.Status)
 		}
 	}
@@ -134,10 +134,10 @@ func TestIntegrationCloudfrontInvalidation(t *testing.T) {
 	create, err := c.CreateInvalidation(context.Background(), *distributionID, paths)
 	require.NoError(t, err)
 
-	log.Infof("Created Invalidation: Id=%v, Status=%v", create.InvalidationId, create.Status)
+	log.Infof("Created Invalidation: Id=%v, Status=%v", create.InvalidationID, create.Status)
 
-	get, err := c.GetInvalidation(context.Background(), *distributionID, create.InvalidationId)
+	get, err := c.GetInvalidation(context.Background(), *distributionID, create.InvalidationID)
 	require.NoError(t, err)
 
-	log.Infof("Got Invalidation %v: CreateTime=%v, Status=%v, Paths=%v", create.InvalidationId, get.CreateTime, get.Status, get.Paths)
+	log.Infof("Got Invalidation %v: CreateTime=%v, Status=%v, Paths=%v", create.InvalidationID, get.CreateTime, get.Status, get.Paths)
 }

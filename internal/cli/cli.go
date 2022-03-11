@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"os"
 	"os/signal"
@@ -68,10 +69,11 @@ func (c *RootCommand) runE(cmd *cobra.Command, args []string) error {
 
 	// build config
 	config := config.New()
-	if viper.GetString("config-file") != "" {
-		if err := config.Watch(viper.GetString("config-file")); err != nil {
-			return err
-		}
+	if viper.GetString("config-file") == "" {
+		return errors.New("no config file specified")
+	}
+	if err := config.Watch(viper.GetString("config-file")); err != nil {
+		return err
 	}
 
 	// build cloudfront client
