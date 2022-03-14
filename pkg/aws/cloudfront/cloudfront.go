@@ -16,7 +16,7 @@ func New(opts ...Option) (*Client, error) {
 
 	// default options
 	o := []Option{
-		WithAwsRegion("us-east-1"),
+		WithAWSRegion("us-east-1"),
 		WithTimeout(30 * time.Second),
 	}
 

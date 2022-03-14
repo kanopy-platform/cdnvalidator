@@ -11,7 +11,6 @@ RUN groupadd -r app && useradd --no-log-init -r -g app app
 USER app
 COPY --from=build /go/bin/app /
 COPY swagger /swagger
-COPY config /config
 ENV APP_ADDR ":8080"
 EXPOSE 8080
 ENTRYPOINT ["/app"]

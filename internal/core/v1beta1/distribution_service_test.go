@@ -176,22 +176,13 @@ func TestCreateInvalidation(t *testing.T) {
 			err: nil,
 		},
 		{
-			// error, empty paths input
-			claims:           []string{"grp1"},
-			distributionName: "dis1",
-			paths:            []string{},
-			mockCf:           &cloudfront.MockCloudFrontClient{},
-			want:             nil,
-			err:              NewInvalidationError(InternalServerError, fmt.Errorf("invalid path"), errors.New("must provide at least one path")),
-		},
-		{
 			// error, paths input contains illegal path
 			claims:           []string{"grp1"},
 			distributionName: "dis1",
 			paths:            []string{"/a/../../*"},
 			mockCf:           &cloudfront.MockCloudFrontClient{},
 			want:             nil,
-			err:              NewInvalidationError(InternalServerError, fmt.Errorf("invalid path"), errors.New("path cannot contain ../")),
+			err:              NewInvalidationError(BadRequestErrorCode, fmt.Errorf("invalid path"), errors.New("path cannot contain ../")),
 		},
 		{
 			// error from cloudfront api
@@ -200,7 +191,7 @@ func TestCreateInvalidation(t *testing.T) {
 			paths:            []string{"/a/*"},
 			mockCf:           &cloudfront.MockCloudFrontClient{Err: errors.New("mock cloudfront error")},
 			want:             nil,
-			err:              NewInvalidationError(InternalServerError, fmt.Errorf("cloudfront CreateInvalidation failed"), errors.New("mock cloudfront error")),
+			err:              NewInvalidationError(BadRequestErrorCode, fmt.Errorf("cloudfront CreateInvalidation failed"), errors.New("mock cloudfront error")),
 		},
 	}
 
@@ -264,7 +255,7 @@ func TestGetInvalidationStatus(t *testing.T) {
 			invalidationId:   "ABC123",
 			mockCf:           &cloudfront.MockCloudFrontClient{Err: errors.New("mock cloudfront error")},
 			want:             nil,
-			err:              NewInvalidationError(InternalServerError, fmt.Errorf("cloudfront GetInvalidation failed"), errors.New("mock cloudfront error")),
+			err:              NewInvalidationError(BadRequestErrorCode, fmt.Errorf("cloudfront GetInvalidation failed"), errors.New("mock cloudfront error")),
 		},
 	}
 

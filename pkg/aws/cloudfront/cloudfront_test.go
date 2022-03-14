@@ -116,7 +116,7 @@ func TestIntegrationCloudfrontInvalidation(t *testing.T) {
 	}
 
 	opts := []Option{
-		WithAwsRegion("us-east-1"),
+		WithAWSRegion("us-east-1"),
 		WithTimeout(time.Duration(30) * time.Second),
 	}
 

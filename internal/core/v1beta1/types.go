@@ -65,9 +65,9 @@ type _ struct {
 }
 
 const (
+	BadRequestErrorCode               = 400
 	ResourceNotFoundErrorCode         = 404
 	InvalidationUnauthorizedErrorCode = 403
-	InternalServerError               = 500
 )
 
 var (

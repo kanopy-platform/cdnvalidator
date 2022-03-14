@@ -9,7 +9,7 @@ import (
 
 type Option func(c *Client)
 
-func WithAwsRegion(region string) Option {
+func WithAWSRegion(region string) Option {
 	return func(c *Client) {
 		if region != "" {
 			c.awsCfgOptions = append(c.awsCfgOptions, config.WithRegion(region))

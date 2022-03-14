@@ -31,9 +31,9 @@ func NewRootCommand() *cobra.Command {
 
 	cmd.PersistentFlags().String("log-level", "info", "Configure log level")
 	cmd.PersistentFlags().String("listen-address", ":8080", "Server listen address")
-	cmd.PersistentFlags().String("auth-cookie", "", "Auth cookie name")
+	cmd.PersistentFlags().String("auth-cookie", "auth_token", "Auth cookie name")
 	cmd.PersistentFlags().String("config-file", "", "Configuration file name")
-	cmd.PersistentFlags().String("aws-region", "", "AWS region for Cloudfront")
+	cmd.PersistentFlags().String("aws-region", "us-east-1", "AWS region for Cloudfront")
 	cmd.PersistentFlags().String("aws-key", "", "AWS static credential key for Cloudfront")
 	cmd.PersistentFlags().String("aws-secret", "", "AWS static credential secret for Cloudfront")
 	cmd.PersistentFlags().String("timeout", "30s", "Timeout")
@@ -78,7 +78,7 @@ func (c *RootCommand) runE(cmd *cobra.Command, args []string) error {
 
 	// build cloudfront client
 	cloudfrontClient, err := cloudfront.New(
-		cloudfront.WithAwsRegion(viper.GetString("aws-region")),
+		cloudfront.WithAWSRegion(viper.GetString("aws-region")),
 		cloudfront.WithStaticCredentials(viper.GetString("aws-key"), viper.GetString("aws-secret")),
 		cloudfront.WithTimeout(viper.GetDuration("timeout")),
 	)

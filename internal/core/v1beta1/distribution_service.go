@@ -74,10 +74,6 @@ func (d *DistributionService) List(ctx context.Context) ([]string, error) {
 }
 
 func (d *DistributionService) CreateInvalidation(ctx context.Context, distributionName string, paths []string) (*InvalidationResponse, error) {
-	if len(paths) == 0 {
-		return nil, NewInvalidationError(InternalServerError, fmt.Errorf("invalid path"), errors.New("must provide at least one path"))
-	}
-
 	distribution, err := d.getDistribution(ctx, distributionName)
 	if err != nil {
 		return nil, err
@@ -88,7 +84,7 @@ func (d *DistributionService) CreateInvalidation(ctx context.Context, distributi
 	for _, p := range paths {
 		// prevent users from doing funny business by going up a directory
 		if strings.Contains(p, "../") {
-			return nil, NewInvalidationError(InternalServerError, fmt.Errorf("invalid path"), errors.New("path cannot contain ../"))
+			return nil, NewInvalidationError(BadRequestErrorCode, fmt.Errorf("invalid path"), errors.New("path cannot contain ../"))
 		}
 
 		absolutePaths = append(absolutePaths, path.Join(distribution.Prefix, p))
@@ -96,7 +92,7 @@ func (d *DistributionService) CreateInvalidation(ctx context.Context, distributi
 
 	res, err := d.cloudfront.CreateInvalidation(ctx, distribution.ID, absolutePaths)
 	if err != nil {
-		return nil, NewInvalidationError(InternalServerError, fmt.Errorf("cloudfront CreateInvalidation failed"), err)
+		return nil, NewInvalidationError(BadRequestErrorCode, fmt.Errorf("cloudfront CreateInvalidation failed"), err)
 	}
 
 	return &InvalidationResponse{
@@ -117,7 +113,7 @@ func (d *DistributionService) GetInvalidationStatus(ctx context.Context, distrib
 
 	res, err := d.cloudfront.GetInvalidation(ctx, distribution.ID, invalidationID)
 	if err != nil {
-		return nil, NewInvalidationError(InternalServerError, fmt.Errorf("cloudfront GetInvalidation failed"), err)
+		return nil, NewInvalidationError(BadRequestErrorCode, fmt.Errorf("cloudfront GetInvalidation failed"), err)
 	}
 
 	return &InvalidationResponse{
