@@ -1,6 +1,5 @@
 GO_MODULE := $(shell git config --get remote.origin.url | grep -o 'github\.com[:/][^.]*' | tr ':' '/')
 CMD_NAME := $(shell basename ${GO_MODULE})
-CURRENT_DIR := $(shell pwd)
 DEFAULT_APP_PORT ?= 8080
 DEFAULT_CONFIG_FILE := /config/example_config.yaml
 ENV_VARIABLES := -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN # ENV to pass into container
@@ -38,7 +37,7 @@ docker:
 
 .PHONY: docker-run
 docker-run: docker ## Build and run the application in a local docker container
-	@docker run -p ${DEFAULT_APP_PORT}:${DEFAULT_APP_PORT} -v ${CURRENT_DIR}${DEFAULT_CONFIG_FILE}:${DEFAULT_CONFIG_FILE} ${ENV_VARIABLES} $(CMD_NAME):latest --config-file=${DEFAULT_CONFIG_FILE}
+	@docker run -p ${DEFAULT_APP_PORT}:${DEFAULT_APP_PORT} -v ${PWD}${DEFAULT_CONFIG_FILE}:${DEFAULT_CONFIG_FILE} ${ENV_VARIABLES} $(CMD_NAME):latest --config-file=${DEFAULT_CONFIG_FILE}
 
 
 .PHONY: swagger-gen

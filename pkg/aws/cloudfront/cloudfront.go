@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	cf "github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 )
@@ -26,9 +27,17 @@ func New(opts ...Option) (*Client, error) {
 		opt(client)
 	}
 
+	// Construct AWS Config Options
+	awsCfgOptions := []func(*config.LoadOptions) error{
+		config.WithRegion(client.region),
+	}
+	if client.staticCredentials.key != "" && client.staticCredentials.secret != "" {
+		awsCfgOptions = append(awsCfgOptions, config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(client.staticCredentials.key, client.staticCredentials.secret, "")))
+	}
+
 	// By default, if no StaticCredentials are provided, LoadDefaultConfig will use environment variables
 	// AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN
-	cfg, err := config.LoadDefaultConfig(context.Background(), client.awsCfgOptions...)
+	cfg, err := config.LoadDefaultConfig(context.Background(), awsCfgOptions...)
 	if err != nil {
 		return nil, err
 	}

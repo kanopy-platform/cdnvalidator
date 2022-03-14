@@ -5,16 +5,16 @@ import (
 	"github.com/kanopy-platform/cdnvalidator/pkg/aws/cloudfront"
 )
 
-type Option func(ds *DistributionService)
+type Option func(ds *distributionService)
 
 func WithConfig(c *config.Config) Option {
-	return func(ds *DistributionService) {
+	return func(ds *distributionService) {
 		ds.config = c
 	}
 }
 
 func WithCloudfrontClient(c *cloudfront.Client) Option {
-	return func(ds *DistributionService) {
+	return func(ds *distributionService) {
 		ds.cloudfront = c
 	}
 }

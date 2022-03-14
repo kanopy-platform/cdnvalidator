@@ -12,12 +12,12 @@ import (
 	"github.com/kanopy-platform/cdnvalidator/pkg/aws/cloudfront"
 )
 
-type DistributionService struct {
+type distributionService struct {
 	config     *config.Config
 	cloudfront *cloudfront.Client
 }
 
-func New(opts ...Option) (*DistributionService, error) {
+func New(opts ...Option) (*distributionService, error) {
 	var err error
 
 	defaultCloudfront, err := cloudfront.New()
@@ -25,7 +25,7 @@ func New(opts ...Option) (*DistributionService, error) {
 		return nil, err
 	}
 
-	d := &DistributionService{
+	d := &distributionService{
 		config:     config.New(),
 		cloudfront: defaultCloudfront,
 	}
@@ -37,7 +37,7 @@ func New(opts ...Option) (*DistributionService, error) {
 	return d, nil
 }
 
-func (d *DistributionService) getDistribution(ctx context.Context, distributionName string) (*config.Distribution, error) {
+func (d *distributionService) getDistribution(ctx context.Context, distributionName string) (*config.Distribution, error) {
 	claims := core.GetClaims(ctx)
 	if len(claims) == 0 {
 		return nil, errors.New("no claims present")
@@ -57,7 +57,7 @@ func (d *DistributionService) getDistribution(ctx context.Context, distributionN
 	return distribution, nil
 }
 
-func (d *DistributionService) List(ctx context.Context) ([]string, error) {
+func (d *distributionService) List(ctx context.Context) ([]string, error) {
 	claims := core.GetClaims(ctx)
 	if len(claims) == 0 {
 		return nil, errors.New("no claims present")
@@ -73,7 +73,7 @@ func (d *DistributionService) List(ctx context.Context) ([]string, error) {
 	return ret, nil
 }
 
-func (d *DistributionService) CreateInvalidation(ctx context.Context, distributionName string, paths []string) (*InvalidationResponse, error) {
+func (d *distributionService) CreateInvalidation(ctx context.Context, distributionName string, paths []string) (*InvalidationResponse, error) {
 	distribution, err := d.getDistribution(ctx, distributionName)
 	if err != nil {
 		return nil, err
@@ -105,7 +105,7 @@ func (d *DistributionService) CreateInvalidation(ctx context.Context, distributi
 	}, nil
 }
 
-func (d *DistributionService) GetInvalidationStatus(ctx context.Context, distributionName string, invalidationID string) (*InvalidationResponse, error) {
+func (d *distributionService) GetInvalidationStatus(ctx context.Context, distributionName string, invalidationID string) (*InvalidationResponse, error) {
 	distribution, err := d.getDistribution(ctx, distributionName)
 	if err != nil {
 		return nil, err
