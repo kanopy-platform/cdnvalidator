@@ -7,6 +7,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/kanopy-platform/cdnvalidator/internal/config"
+	"github.com/kanopy-platform/cdnvalidator/pkg/aws/cloudfront"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,7 +16,14 @@ var testHandler http.Handler
 
 func TestMain(m *testing.M) {
 	var err error
-	testHandler, err = New()
+
+	config := config.New()
+	cloudfront, err := cloudfront.New()
+	if err != nil {
+		os.Exit(1)
+	}
+
+	testHandler, err = New(config, cloudfront)
 	if err != nil {
 		os.Exit(1)
 	}

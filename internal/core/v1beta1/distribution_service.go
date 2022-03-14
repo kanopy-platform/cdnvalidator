@@ -12,44 +12,31 @@ import (
 	"github.com/kanopy-platform/cdnvalidator/pkg/aws/cloudfront"
 )
 
-type distributionService struct {
-	config     *config.Config
-	cloudfront *cloudfront.Client
+type DistributionService struct {
+	Config     *config.Config
+	Cloudfront *cloudfront.Client
 }
 
-func New(opts ...Option) (*distributionService, error) {
-	var err error
-
-	defaultCloudfront, err := cloudfront.New()
-	if err != nil {
-		return nil, err
+func New(config *config.Config, cloudfront *cloudfront.Client) *DistributionService {
+	return &DistributionService{
+		Config:     config,
+		Cloudfront: cloudfront,
 	}
-
-	d := &distributionService{
-		config:     config.New(),
-		cloudfront: defaultCloudfront,
-	}
-
-	for _, opt := range opts {
-		opt(d)
-	}
-
-	return d, nil
 }
 
-func (d *distributionService) getDistribution(ctx context.Context, distributionName string) (*config.Distribution, error) {
+func (d *DistributionService) getDistribution(ctx context.Context, distributionName string) (*config.Distribution, error) {
 	claims := core.GetClaims(ctx)
 	if len(claims) == 0 {
 		return nil, errors.New("no claims present")
 	}
 
-	distribution := d.config.Distribution(distributionName)
+	distribution := d.Config.Distribution(distributionName)
 	if distribution == nil {
 		return nil, NewInvalidationError(ResourceNotFoundErrorCode, fmt.Errorf("distribution %s not found", distributionName), distributionName)
 	}
 
 	// check user is entitled to the distributionName
-	entitledDistributions := d.config.DistributionsFromClaims(claims)
+	entitledDistributions := d.Config.DistributionsFromClaims(claims)
 	if _, ok := entitledDistributions[distributionName]; !ok {
 		return nil, NewInvalidationError(InvalidationUnauthorizedErrorCode, fmt.Errorf("distribution unauthorized"), distributionName)
 	}
@@ -57,13 +44,13 @@ func (d *distributionService) getDistribution(ctx context.Context, distributionN
 	return distribution, nil
 }
 
-func (d *distributionService) List(ctx context.Context) ([]string, error) {
+func (d *DistributionService) List(ctx context.Context) ([]string, error) {
 	claims := core.GetClaims(ctx)
 	if len(claims) == 0 {
 		return nil, errors.New("no claims present")
 	}
 
-	distributions := d.config.DistributionsFromClaims(claims)
+	distributions := d.Config.DistributionsFromClaims(claims)
 
 	ret := make([]string, 0, len(distributions))
 	for name := range distributions {
@@ -73,7 +60,7 @@ func (d *distributionService) List(ctx context.Context) ([]string, error) {
 	return ret, nil
 }
 
-func (d *distributionService) CreateInvalidation(ctx context.Context, distributionName string, paths []string) (*InvalidationResponse, error) {
+func (d *DistributionService) CreateInvalidation(ctx context.Context, distributionName string, paths []string) (*InvalidationResponse, error) {
 	distribution, err := d.getDistribution(ctx, distributionName)
 	if err != nil {
 		return nil, err
@@ -90,7 +77,7 @@ func (d *distributionService) CreateInvalidation(ctx context.Context, distributi
 		absolutePaths = append(absolutePaths, path.Join(distribution.Prefix, p))
 	}
 
-	res, err := d.cloudfront.CreateInvalidation(ctx, distribution.ID, absolutePaths)
+	res, err := d.Cloudfront.CreateInvalidation(ctx, distribution.ID, absolutePaths)
 	if err != nil {
 		return nil, NewInvalidationError(BadRequestErrorCode, fmt.Errorf("cloudfront CreateInvalidation failed"), err)
 	}
@@ -105,13 +92,13 @@ func (d *distributionService) CreateInvalidation(ctx context.Context, distributi
 	}, nil
 }
 
-func (d *distributionService) GetInvalidationStatus(ctx context.Context, distributionName string, invalidationID string) (*InvalidationResponse, error) {
+func (d *DistributionService) GetInvalidationStatus(ctx context.Context, distributionName string, invalidationID string) (*InvalidationResponse, error) {
 	distribution, err := d.getDistribution(ctx, distributionName)
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := d.cloudfront.GetInvalidation(ctx, distribution.ID, invalidationID)
+	res, err := d.Cloudfront.GetInvalidation(ctx, distribution.ID, invalidationID)
 	if err != nil {
 		return nil, NewInvalidationError(BadRequestErrorCode, fmt.Errorf("cloudfront GetInvalidation failed"), err)
 	}

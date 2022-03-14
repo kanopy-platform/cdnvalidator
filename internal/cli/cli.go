@@ -87,8 +87,8 @@ func (c *RootCommand) runE(cmd *cobra.Command, args []string) error {
 	}
 
 	s, err := server.New(
-		server.WithConfig(config),
-		server.WithCloudfrontClient(cloudfrontClient),
+		config,
+		cloudfrontClient,
 	)
 	if err != nil {
 		return err

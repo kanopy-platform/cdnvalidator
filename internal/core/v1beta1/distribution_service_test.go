@@ -40,8 +40,9 @@ func TestGetDistribution(t *testing.T) {
 	testConfig, err := newTestConfig()
 	assert.NoError(t, err)
 
-	ds, err := New(WithConfig(testConfig))
-	assert.NoError(t, err)
+	testCf := cloudfront.NewTestCloudfrontClient(&cloudfront.MockCloudFrontClient{})
+
+	ds := New(testConfig, testCf)
 
 	tests := []struct {
 		// inputs
@@ -91,8 +92,9 @@ func TestList(t *testing.T) {
 	testConfig, err := newTestConfig()
 	assert.NoError(t, err)
 
-	ds, err := New(WithConfig(testConfig))
-	assert.NoError(t, err)
+	testCf := cloudfront.NewTestCloudfrontClient(&cloudfront.MockCloudFrontClient{})
+
+	ds := New(testConfig, testCf)
 
 	tests := []struct {
 		// inputs
@@ -197,8 +199,7 @@ func TestCreateInvalidation(t *testing.T) {
 
 	for _, test := range tests {
 		cfClient := cloudfront.NewTestCloudfrontClient(test.mockCf)
-		ds, err := New(WithConfig(testConfig), WithCloudfrontClient(cfClient))
-		assert.NoError(t, err)
+		ds := New(testConfig, cfClient)
 
 		ctx := addClaims(context.Background(), test.claims)
 
@@ -261,8 +262,7 @@ func TestGetInvalidationStatus(t *testing.T) {
 
 	for _, test := range tests {
 		cfClient := cloudfront.NewTestCloudfrontClient(test.mockCf)
-		ds, err := New(WithConfig(testConfig), WithCloudfrontClient(cfClient))
-		assert.NoError(t, err)
+		ds := New(testConfig, cfClient)
 
 		ctx := addClaims(context.Background(), test.claims)
 

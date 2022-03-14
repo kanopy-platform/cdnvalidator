@@ -13,12 +13,7 @@ const ErrUserNotEntitled = "User is not entitled to the CloudFront Invalidation 
 
 const PathPrefix = "/api/v1beta1"
 
-func New(router *mux.Router, opts ...v1beta1.Option) (*mux.Router, error) {
-	ds, err := v1beta1.New(opts...)
-	if err != nil {
-		return nil, err
-	}
-
+func New(router *mux.Router, ds *v1beta1.DistributionService) *mux.Router {
 	api := router.PathPrefix(PathPrefix).Subrouter()
 
 	// append api handlers here
@@ -26,7 +21,7 @@ func New(router *mux.Router, opts ...v1beta1.Option) (*mux.Router, error) {
 	api.HandleFunc("/distributions/{name}/invalidations", createInvalidation(ds)).Methods(http.MethodPost)
 	api.HandleFunc("/distributions/{name}/invalidations/{id}", getInvalidation(ds)).Methods(http.MethodGet)
 
-	return api, nil
+	return api
 }
 
 // swagger:route GET /api/v1beta1/distributions GetDistributions get-distributions
