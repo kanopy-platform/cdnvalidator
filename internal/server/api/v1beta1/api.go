@@ -13,18 +13,6 @@ const ErrUserNotEntitled = "User is not entitled to the CloudFront Invalidation 
 
 const PathPrefix = "/api/v1beta1"
 
-// swagger:meta
-// Perform CDN Invalidations on specific distributions.
-//
-// Scheme: https
-// Security:
-//   - jwt
-// SecurityDefinitions:
-// jwt:
-//   type: Bearer
-//   name: Authorization
-//   in: header
-
 func New(router *mux.Router) *mux.Router {
 	ds := v1beta1.NewFake()
 	api := router.PathPrefix(PathPrefix).Subrouter()
