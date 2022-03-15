@@ -7,7 +7,7 @@ import (
 )
 
 type DistributionService interface {
-	List(ctx context.Context) (map[v1beta1.VanityDistributionName]v1beta1.Distribution, error)
+	List(ctx context.Context) ([]string, error)
 	CreateInvalidation(ctx context.Context, distributionName string, paths []string) (*v1beta1.InvalidationResponse, error)
 	GetInvalidationStatus(ctx context.Context, distributionName string, invalidationID string) (*v1beta1.InvalidationResponse, error)
 }

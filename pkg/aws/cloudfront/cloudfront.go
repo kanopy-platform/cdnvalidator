@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	cf "github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 )
@@ -16,7 +17,7 @@ func New(opts ...Option) (*Client, error) {
 
 	// default options
 	o := []Option{
-		WithAwsRegion("us-east-1"),
+		WithAWSRegion("us-east-1"),
 		WithTimeout(30 * time.Second),
 	}
 
@@ -26,9 +27,17 @@ func New(opts ...Option) (*Client, error) {
 		opt(client)
 	}
 
+	// Construct AWS Config Options
+	awsCfgOptions := []func(*config.LoadOptions) error{
+		config.WithRegion(client.region),
+	}
+	if client.staticCredentials.key != "" && client.staticCredentials.secret != "" {
+		awsCfgOptions = append(awsCfgOptions, config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(client.staticCredentials.key, client.staticCredentials.secret, "")))
+	}
+
 	// By default, if no StaticCredentials are provided, LoadDefaultConfig will use environment variables
 	// AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN
-	cfg, err := config.LoadDefaultConfig(context.Background(), client.awsCfgOptions...)
+	cfg, err := config.LoadDefaultConfig(context.Background(), awsCfgOptions...)
 	if err != nil {
 		return nil, err
 	}
@@ -98,8 +107,10 @@ func (c *Client) CreateInvalidation(ctx context.Context, distributionId string, 
 	invalidation := *output.Invalidation
 
 	response := &CreateInvalidationOutput{
-		InvalidationId: aws.ToString(invalidation.Id),
+		InvalidationID: aws.ToString(invalidation.Id),
 		Status:         aws.ToString(invalidation.Status),
+		CreateTime:     aws.ToTime(invalidation.CreateTime),
+		Paths:          invalidation.InvalidationBatch.Paths.Items,
 	}
 
 	return response, nil
@@ -124,9 +135,10 @@ func (c *Client) GetInvalidation(ctx context.Context, distributionId string, inv
 	invalidation := *output.Invalidation
 
 	response := &GetInvalidationOutput{
-		CreateTime: aws.ToTime(invalidation.CreateTime),
-		Status:     aws.ToString(invalidation.Status),
-		Paths:      invalidation.InvalidationBatch.Paths.Items,
+		InvalidationID: aws.ToString(invalidation.Id),
+		Status:         aws.ToString(invalidation.Status),
+		CreateTime:     aws.ToTime(invalidation.CreateTime),
+		Paths:          invalidation.InvalidationBatch.Paths.Items,
 	}
 
 	return response, nil

@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -10,8 +11,11 @@ import (
 
 	"github.com/felixge/httpsnoop"
 	"github.com/gorilla/mux"
+	"github.com/kanopy-platform/cdnvalidator/internal/config"
+	v1beta1_ds "github.com/kanopy-platform/cdnvalidator/internal/core/v1beta1"
 	"github.com/kanopy-platform/cdnvalidator/internal/server/api/v1beta1"
 	"github.com/kanopy-platform/cdnvalidator/internal/server/middleware/authorization"
+	"github.com/kanopy-platform/cdnvalidator/pkg/aws/cloudfront"
 	"github.com/kanopy-platform/cdnvalidator/pkg/http/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -21,8 +25,15 @@ type Server struct {
 	authCookieName string
 }
 
-func New(opts ...Option) (http.Handler, error) {
+func New(config *config.Config, cloudfront *cloudfront.Client, opts ...Option) (http.Handler, error) {
 	s := &Server{router: mux.NewRouter()}
+
+	if config == nil {
+		return nil, errors.New("missing required parameter config")
+	}
+	if cloudfront == nil {
+		return nil, errors.New("missing required parameter cloudfront")
+	}
 
 	for _, opt := range opts {
 		if err := opt(s); err != nil {
@@ -40,7 +51,10 @@ func New(opts ...Option) (http.Handler, error) {
 	authmiddleware := authorization.New(authorization.WithCookieName(s.authCookieName),
 		authorization.WithAuthorizationHeader())
 
-	api := v1beta1.New(s.router)
+	api := v1beta1.New(s.router,
+		v1beta1_ds.New(config, cloudfront),
+	)
+
 	api.Use(authmiddleware)
 
 	return s.router, nil

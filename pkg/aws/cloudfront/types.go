@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/config"
 	cf "github.com/aws/aws-sdk-go-v2/service/cloudfront"
 )
 
@@ -16,18 +15,27 @@ type cfClientAPI interface {
 }
 
 type Client struct {
-	cfClient      cfClientAPI
-	awsCfgOptions []func(*config.LoadOptions) error
-	timeout       time.Duration
+	cfClient          cfClientAPI
+	region            string
+	staticCredentials awsStaticCredentials
+	timeout           time.Duration
+}
+
+type awsStaticCredentials struct {
+	key    string
+	secret string
 }
 
 type CreateInvalidationOutput struct {
-	InvalidationId string
+	InvalidationID string
 	Status         string
+	CreateTime     time.Time
+	Paths          []string
 }
 
 type GetInvalidationOutput struct {
-	CreateTime time.Time
-	Status     string
-	Paths      []string
+	InvalidationID string
+	Status         string
+	CreateTime     time.Time
+	Paths          []string
 }

@@ -9,6 +9,10 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+func New() *Config {
+	return &Config{}
+}
+
 // validateDistributions checks that the condition that
 // two distributions with the same distribution ID MUST NOT share the same prefix.
 // or in other terms, every pair of id,prefix (Distribution) must be unique

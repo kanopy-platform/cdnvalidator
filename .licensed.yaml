@@ -11,11 +11,13 @@ reviewed:
   go:
     # default accept
     - github.com/magiconair/properties #bsd-2
+    - github.com/jmespath/go-jmespath # apache-2.0
     - github.com/pmezard/go-difflib/difflib # bsd-style
     - golang.org/x/**/* # bsd-style
     - gopkg.in/ini.v1 # apache-2.0
     - gopkg.in/yaml.v2 # apache-2.0
     - google.golang.org/**/*
+    - sigs.k8s.io/yaml # mit
     # custom
     - github.com/gorilla/mux # bsd-3-clause
 

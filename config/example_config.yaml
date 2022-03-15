@@ -1,0 +1,14 @@
+---
+distributions:
+  dis1:
+    id: "ABC123"
+    prefix: "/foo"
+  dis2:
+    id: "DEF456"
+    prefix: "/bar"
+entitlements:
+  grp1:
+    - dis1
+    - dis2
+  grp2:
+    - dis2
