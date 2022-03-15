@@ -13,6 +13,18 @@ const ErrUserNotEntitled = "User is not entitled to the CloudFront Invalidation 
 
 const PathPrefix = "/api/v1beta1"
 
+// swagger:meta
+// Perform CDN Invalidations on specific distributions.
+//
+// Scheme: https
+// Security:
+//   - jwt
+// SecurityDefinitions:
+// jwt:
+//   type: Bearer
+//   name: Authorization
+//   in: header
+
 func New(router *mux.Router) *mux.Router {
 	ds := v1beta1.NewFake()
 	api := router.PathPrefix(PathPrefix).Subrouter()
@@ -27,8 +39,10 @@ func New(router *mux.Router) *mux.Router {
 
 // swagger:route GET /api/v1beta1/distributions GetDistributions get-distributions
 //
-// Get a list of distributions you are entitled to perform invalidations
+// Get a list of distributions you are entitled to perform invalidations.
 //
+//     Security:
+//       jwt:
 //
 // responses:
 //   200: DistributionResponse
@@ -52,10 +66,12 @@ func getDistributions(ds DistributionService) http.HandlerFunc {
 	}
 }
 
-// swagger:route POST  /api/v1beta1/distributions/{name} SubmitInvalidation submit-invalidation
+// swagger:route POST  /api/v1beta1/distributions/{name}/invalidations SubmitInvalidation submit-invalidation
 //
 // Submit an Invalidation Request
 //
+//     Security:
+//       jwt:
 //
 // responses:
 //   200: InvalidationResponse
@@ -108,6 +124,8 @@ func createInvalidation(ds DistributionService) http.HandlerFunc {
 //
 // Get an Invalidation Request
 //
+//     Security:
+//       jwt:
 //
 // responses:
 //   200: InvalidationResponse

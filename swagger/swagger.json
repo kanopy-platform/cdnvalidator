@@ -1,12 +1,21 @@
 {
   "swagger": "2.0",
+  "info": {
+    "description": "Scheme: https",
+    "title": "Perform CDN Invalidations on specific distributions."
+  },
   "paths": {
     "/api/v1beta1/distributions": {
       "get": {
-        "description": "Get a list of distributions you are entitled to perform invalidations",
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
         "tags": [
           "GetDistributions"
         ],
+        "summary": "Get a list of distributions you are entitled to perform invalidations.",
         "operationId": "get-distributions",
         "responses": {
           "200": {
@@ -30,8 +39,13 @@
         }
       }
     },
-    "/api/v1beta1/distributions/{name}": {
+    "/api/v1beta1/distributions/{name}/invalidations": {
       "post": {
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
         "description": "Submit an Invalidation Request",
         "tags": [
           "SubmitInvalidation"
@@ -91,6 +105,11 @@
     },
     "/api/v1beta1/distributions/{name}/invalidations/{id}": {
       "get": {
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
         "description": "Get an Invalidation Request",
         "tags": [
           "InvalidationResponse"
@@ -229,6 +248,13 @@
         }
       },
       "x-go-package": "github.com/kanopy-platform/cdnvalidator/internal/core/v1beta1"
+    }
+  },
+  "securityDefinitions": {
+    "jwt": {
+      "type": "Bearer",
+      "name": "Authorization",
+      "in": "header"
     }
   }
 }
