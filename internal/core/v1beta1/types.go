@@ -72,6 +72,7 @@ const (
 
 var (
 	statusCodeReasons = map[int]string{
+		BadRequestErrorCode:               "Bad Request: %s",
 		InvalidationUnauthorizedErrorCode: "User is not entitled to invalidate distribution: %s",
 		ResourceNotFoundErrorCode:         "Resource not found: %s",
 	}
