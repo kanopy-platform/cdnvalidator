@@ -3,6 +3,7 @@ CMD_NAME := $(shell basename ${GO_MODULE})
 DEFAULT_APP_PORT ?= 8080
 DEFAULT_CONFIG_FILE := /config/example_config.yaml
 ENV_VARIABLES := -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN # ENV to pass into container
+LOCAL_REGISTRY := registry.example.com
 SWAGGER := docker run --rm -it -e GOPATH=${GOPATH}:/go -v ${HOME}:${HOME} -w ${PWD} quay.io/goswagger/swagger
 
 RUN ?= .*
@@ -39,6 +40,10 @@ docker:
 docker-run: docker ## Build and run the application in a local docker container
 	@docker run -p ${DEFAULT_APP_PORT}:${DEFAULT_APP_PORT} -v ${PWD}${DEFAULT_CONFIG_FILE}:${DEFAULT_CONFIG_FILE} ${ENV_VARIABLES} $(CMD_NAME):latest --config-file=${DEFAULT_CONFIG_FILE}
 
+.PHONY: docker-push-local
+docker-push-local: ## Build and push the image to local docker registry
+	@docker build -t $(LOCAL_REGISTRY)/$(CMD_NAME):latest .
+	@docker push $(LOCAL_REGISTRY)/$(CMD_NAME):latest
 
 .PHONY: swagger-gen
 swagger-gen: ## Generate swagger OpenAPI specification
