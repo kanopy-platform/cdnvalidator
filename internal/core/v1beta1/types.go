@@ -108,6 +108,15 @@ func NewInvalidationError(code int, err error, args ...interface{}) error {
 	}
 }
 
+func ErrorBadRequest(err error) bool {
+	var ierr InvalidationError
+	if !errors.As(err, &ierr) {
+		return false
+	}
+
+	return ierr.Code == BadRequestErrorCode
+}
+
 func ErrorIsUnauthorized(err error) bool {
 	var ierr InvalidationError
 	if !errors.As(err, &ierr) {

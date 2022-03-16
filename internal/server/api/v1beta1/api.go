@@ -89,6 +89,11 @@ func createInvalidation(ds DistributionService) http.HandlerFunc {
 
 		status, err := ds.CreateInvalidation(r.Context(), name, invalidationReq.Paths)
 		if err != nil {
+			if v1beta1.ErrorBadRequest(err) {
+				writeJSON(w, err, http.StatusBadRequest)
+				return
+			}
+
 			if v1beta1.ErrorResourceNotFound(err) {
 				writeJSON(w, err, http.StatusNotFound)
 				return
