@@ -72,6 +72,7 @@ const (
 
 var (
 	statusCodeReasons = map[int]string{
+		BadRequestErrorCode:               "Bad Request: %s",
 		InvalidationUnauthorizedErrorCode: "User is not entitled to invalidate distribution: %s",
 		ResourceNotFoundErrorCode:         "Resource not found: %s",
 	}
@@ -106,6 +107,15 @@ func NewInvalidationError(code int, err error, args ...interface{}) error {
 		},
 		Err: err,
 	}
+}
+
+func ErrorBadRequest(err error) bool {
+	var ierr InvalidationError
+	if !errors.As(err, &ierr) {
+		return false
+	}
+
+	return ierr.Code == BadRequestErrorCode
 }
 
 func ErrorIsUnauthorized(err error) bool {
