@@ -1,9 +1,11 @@
 package server
 
 import (
+	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html/template"
 	"net/http"
 	"os"
 	"strings"
@@ -18,15 +20,23 @@ import (
 	"github.com/kanopy-platform/cdnvalidator/pkg/aws/cloudfront"
 	"github.com/kanopy-platform/cdnvalidator/pkg/http/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	log "github.com/sirupsen/logrus"
 )
+
+//go:embed templates
+var embeddedFS embed.FS
 
 type Server struct {
 	router         *mux.Router
+	template       *template.Template
 	authCookieName string
 }
 
 func New(config *config.Config, cloudfront *cloudfront.Client, opts ...Option) (http.Handler, error) {
-	s := &Server{router: mux.NewRouter()}
+	s := &Server{
+		router:   mux.NewRouter(),
+		template: template.Must(template.ParseFS(embeddedFS, "templates/*.tmpl")),
+	}
 
 	if config == nil {
 		return nil, errors.New("missing required parameter config")
@@ -62,7 +72,11 @@ func New(config *config.Config, cloudfront *cloudfront.Client, opts ...Option) (
 
 func (s *Server) handleRoot() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "hello world")
+		if err := s.template.ExecuteTemplate(w, "index.tmpl", nil); err != nil {
+			log.WithError(err).Error("error executing template")
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
 	}
 }
 
