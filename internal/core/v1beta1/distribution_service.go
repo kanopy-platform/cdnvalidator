@@ -4,7 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"path"
+	"net/url"
+	"path/filepath"
 	"strings"
 
 	"github.com/kanopy-platform/cdnvalidator/internal/config"
@@ -66,20 +67,32 @@ func (d *DistributionService) CreateInvalidation(ctx context.Context, distributi
 		return nil, err
 	}
 
-	// prepend prefix to all the paths
-	absolutePaths := make([]string, 0, len(paths))
+	cleanedPaths := make([]string, 0, len(paths))
+	invalidPaths := make([]string, 0)
+
 	for _, p := range paths {
-		// prevent users from doing funny business by going up a directory
-		if strings.Contains(p, "../") {
-			return nil, NewInvalidationError(BadRequestErrorCode, fmt.Errorf("invalid path"), errors.New("path cannot contain ../"))
+		// URL decode the path, and clean it
+		decodedPath, err := url.PathUnescape(p)
+		if err != nil {
+			return nil, NewInvalidationError(BadRequestErrorCode, errors.New("invalid encoded path"), fmt.Errorf("invalid encoded path: %v", p))
 		}
 
-		absolutePaths = append(absolutePaths, path.Join(distribution.Prefix, p))
+		cleanedPath := filepath.Clean(decodedPath)
+
+		if !strings.HasPrefix(cleanedPath, distribution.Prefix) {
+			invalidPaths = append(invalidPaths, p)
+		} else {
+			// use the cleaned URL encoded path
+			cleanedPaths = append(cleanedPaths, filepath.Clean(p))
+		}
+	}
+	if len(invalidPaths) > 0 {
+		return nil, NewInvalidationError(BadRequestErrorCode, errors.New("unauthorized paths"), fmt.Errorf("unauthorized paths: %v", invalidPaths))
 	}
 
-	res, err := d.Cloudfront.CreateInvalidation(ctx, distribution.ID, absolutePaths)
+	res, err := d.Cloudfront.CreateInvalidation(ctx, distribution.ID, cleanedPaths)
 	if err != nil {
-		return nil, NewInvalidationError(BadRequestErrorCode, fmt.Errorf("cloudfront CreateInvalidation failed"), err)
+		return nil, NewInvalidationError(BadRequestErrorCode, errors.New("cloudfront CreateInvalidation failed"), err)
 	}
 
 	return &InvalidationResponse{
