@@ -79,7 +79,7 @@ func (d *DistributionService) CreateInvalidation(ctx context.Context, distributi
 		}
 	}
 	if len(invalidPaths) > 0 {
-		return nil, NewInvalidationError(BadRequestErrorCode, errors.New("unauthorized paths"), invalidPaths)
+		return nil, NewInvalidationError(BadRequestErrorCode, errors.New("unauthorized paths"), fmt.Sprintf("unauthorized paths: %v", invalidPaths))
 	}
 
 	res, err := d.Cloudfront.CreateInvalidation(ctx, distribution.ID, cleanedPaths)

@@ -184,7 +184,7 @@ func TestCreateInvalidation(t *testing.T) {
 			paths:            []string{"/a/*", "/foo/a/b", "/a/../*", "..", "/foo/../*", "/foo/a/..//../*"},
 			mockCf:           &cloudfront.MockCloudFrontClient{},
 			want:             nil,
-			err:              NewInvalidationError(BadRequestErrorCode, errors.New("unauthorized paths"), []string{"/a/*", "/a/../*", "..", "/foo/../*", "/foo/a/..//../*"}),
+			err:              NewInvalidationError(BadRequestErrorCode, errors.New("unauthorized paths"), fmt.Sprintf("unauthorized paths: %v", []string{"/a/*", "/a/../*", "..", "/foo/../*", "/foo/a/..//../*"})),
 		},
 		{
 			// error from cloudfront api
