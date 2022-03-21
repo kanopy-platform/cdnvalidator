@@ -27,15 +27,16 @@ import (
 var embeddedFS embed.FS
 
 type Server struct {
-	router         *mux.Router
-	template       *template.Template
-	authCookieName string
+	router              *mux.Router
+	template            *template.Template
+	distributionService *v1beta1_ds.DistributionService
+	authCookieName      string
 }
 
 func New(config *config.Config, cloudfront *cloudfront.Client, opts ...Option) (http.Handler, error) {
 	s := &Server{
 		router:   mux.NewRouter(),
-		template: template.Must(template.ParseFS(embeddedFS, "templates/*.tmpl")),
+		template: template.Must(template.ParseFS(embeddedFS, "templates/*.html")),
 	}
 
 	if config == nil {
@@ -53,18 +54,20 @@ func New(config *config.Config, cloudfront *cloudfront.Client, opts ...Option) (
 
 	s.router.Use(prometheus.New())
 	s.router.Use(logRequestHandler)
-	s.router.HandleFunc("/", s.handleRoot())
 	s.router.HandleFunc("/healthz", s.handleHealthz())
 	s.router.Handle("/metrics", promhttp.Handler())
 	s.router.PathPrefix("/swagger/").Handler(http.StripPrefix("/swagger", http.FileServer(http.Dir("swagger"))))
 
+	ui := s.router.PathPrefix("").Subrouter()
+	ui.HandleFunc("/", s.handleRoot()).Methods(http.MethodGet)
+
 	authmiddleware := authorization.New(authorization.WithCookieName(s.authCookieName),
 		authorization.WithAuthorizationHeader())
 
-	api := v1beta1.New(s.router,
-		v1beta1_ds.New(config, cloudfront),
-	)
+	s.distributionService = v1beta1_ds.New(config, cloudfront)
+	api := v1beta1.New(s.router, s.distributionService)
 
+	ui.Use(authmiddleware)
 	api.Use(authmiddleware)
 
 	return s.router, nil
@@ -72,7 +75,18 @@ func New(config *config.Config, cloudfront *cloudfront.Client, opts ...Option) (
 
 func (s *Server) handleRoot() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := s.template.ExecuteTemplate(w, "index.tmpl", nil); err != nil {
+		d, err := s.distributionService.List(r.Context())
+		if err != nil {
+			log.WithError(err).Error("error get distribution list")
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		data := map[string]interface{}{
+			"Distributions": d,
+		}
+
+		if err := s.template.ExecuteTemplate(w, "index.html", data); err != nil {
 			log.WithError(err).Error("error executing template")
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
