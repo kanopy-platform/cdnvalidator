@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/kanopy-platform/cdnvalidator/internal/config"
@@ -66,20 +66,25 @@ func (d *DistributionService) CreateInvalidation(ctx context.Context, distributi
 		return nil, err
 	}
 
-	// prepend prefix to all the paths
-	absolutePaths := make([]string, 0, len(paths))
-	for _, p := range paths {
-		// prevent users from doing funny business by going up a directory
-		if strings.Contains(p, "../") {
-			return nil, NewInvalidationError(BadRequestErrorCode, fmt.Errorf("invalid path"), errors.New("path cannot contain ../"))
-		}
+	cleanedPaths := make([]string, 0, len(paths))
+	invalidPaths := make([]string, 0)
 
-		absolutePaths = append(absolutePaths, path.Join(distribution.Prefix, p))
+	for _, p := range paths {
+		cleanedPath := filepath.Clean(p)
+
+		if strings.HasPrefix(cleanedPath, distribution.Prefix) {
+			cleanedPaths = append(cleanedPaths, cleanedPath)
+		} else {
+			invalidPaths = append(invalidPaths, p)
+		}
+	}
+	if len(invalidPaths) > 0 {
+		return nil, NewInvalidationError(BadRequestErrorCode, errors.New("unauthorized paths"), fmt.Sprintf("unauthorized paths: %v", invalidPaths))
 	}
 
-	res, err := d.Cloudfront.CreateInvalidation(ctx, distribution.ID, absolutePaths)
+	res, err := d.Cloudfront.CreateInvalidation(ctx, distribution.ID, cleanedPaths)
 	if err != nil {
-		return nil, NewInvalidationError(BadRequestErrorCode, fmt.Errorf("cloudfront CreateInvalidation failed"), err)
+		return nil, NewInvalidationError(BadRequestErrorCode, errors.New("cloudfront CreateInvalidation failed"), err)
 	}
 
 	return &InvalidationResponse{

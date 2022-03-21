@@ -160,7 +160,7 @@ func TestCreateInvalidation(t *testing.T) {
 			// success
 			claims:           []string{"grp1"},
 			distributionName: "dis1",
-			paths:            []string{"/*", "/a/*", "/a/b/*"},
+			paths:            []string{"/foo/*", "/foo/a/*", "/foo/a%20bb%2Ec/bar/*", "/foo/bar/../*", "/foo/bar//../%2e%2e%2f/*"},
 			mockCf: &cloudfront.MockCloudFrontClient{
 				Err:            nil,
 				CreateTime:     time.Unix(0, 0).UTC(),
@@ -173,27 +173,27 @@ func TestCreateInvalidation(t *testing.T) {
 				},
 				ID:      "ABC123",
 				Created: time.Unix(0, 0).UTC(),
-				Paths:   []string{"/foo/*", "/foo/a/*", "/foo/a/b/*"}, // result should be prefixed with distribution.Prefix
+				Paths:   []string{"/foo/*", "/foo/a/*", "/foo/a%20bb%2Ec/bar/*", "/foo/*", "/foo/%2e%2e%2f/*"}, // result should be cleaned paths with encoding
 			},
 			err: nil,
 		},
 		{
-			// error, paths input contains illegal path
+			// error, unauthorized paths
 			claims:           []string{"grp1"},
 			distributionName: "dis1",
-			paths:            []string{"/a/../../*"},
+			paths:            []string{"/a/*", "/foo/a/b", "/a/../*", "..", "/foo/../*", "/foo/a/..//../*"},
 			mockCf:           &cloudfront.MockCloudFrontClient{},
 			want:             nil,
-			err:              NewInvalidationError(BadRequestErrorCode, fmt.Errorf("invalid path"), errors.New("path cannot contain ../")),
+			err:              NewInvalidationError(BadRequestErrorCode, errors.New("unauthorized paths"), fmt.Sprintf("unauthorized paths: %v", []string{"/a/*", "/a/../*", "..", "/foo/../*", "/foo/a/..//../*"})),
 		},
 		{
 			// error from cloudfront api
 			claims:           []string{"grp2"},
 			distributionName: "dis2",
-			paths:            []string{"/a/*"},
+			paths:            []string{"/bar/*"},
 			mockCf:           &cloudfront.MockCloudFrontClient{Err: errors.New("mock cloudfront error")},
 			want:             nil,
-			err:              NewInvalidationError(BadRequestErrorCode, fmt.Errorf("cloudfront CreateInvalidation failed"), errors.New("mock cloudfront error")),
+			err:              NewInvalidationError(BadRequestErrorCode, errors.New("cloudfront CreateInvalidation failed"), errors.New("mock cloudfront error")),
 		},
 	}
 
