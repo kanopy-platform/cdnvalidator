@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/url"
 	"path/filepath"
 	"strings"
 
@@ -71,23 +70,16 @@ func (d *DistributionService) CreateInvalidation(ctx context.Context, distributi
 	invalidPaths := make([]string, 0)
 
 	for _, p := range paths {
-		// URL decode the path, and clean it
-		decodedPath, err := url.PathUnescape(p)
-		if err != nil {
-			return nil, NewInvalidationError(BadRequestErrorCode, errors.New("invalid encoded path"), fmt.Errorf("invalid encoded path: %v", p))
-		}
+		cleanedPath := filepath.Clean(p)
 
-		cleanedPath := filepath.Clean(decodedPath)
-
-		if !strings.HasPrefix(cleanedPath, distribution.Prefix) {
-			invalidPaths = append(invalidPaths, p)
+		if strings.HasPrefix(cleanedPath, distribution.Prefix) {
+			cleanedPaths = append(cleanedPaths, cleanedPath)
 		} else {
-			// use the cleaned URL encoded path
-			cleanedPaths = append(cleanedPaths, filepath.Clean(p))
+			invalidPaths = append(invalidPaths, p)
 		}
 	}
 	if len(invalidPaths) > 0 {
-		return nil, NewInvalidationError(BadRequestErrorCode, errors.New("unauthorized paths"), fmt.Errorf("unauthorized paths: %v", invalidPaths))
+		return nil, NewInvalidationError(BadRequestErrorCode, errors.New("unauthorized paths"), invalidPaths)
 	}
 
 	res, err := d.Cloudfront.CreateInvalidation(ctx, distribution.ID, cleanedPaths)

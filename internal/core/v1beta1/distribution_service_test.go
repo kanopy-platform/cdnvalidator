@@ -160,7 +160,7 @@ func TestCreateInvalidation(t *testing.T) {
 			// success
 			claims:           []string{"grp1"},
 			distributionName: "dis1",
-			paths:            []string{"/foo/*", "/foo/a/*", "/foo/a%20bb%2Ec/bar/*", "/foo/bar/../*", "/foo/bar/%2e%2e%2f/*"},
+			paths:            []string{"/foo/*", "/foo/a/*", "/foo/a%20bb%2Ec/bar/*", "/foo/bar/../*", "/foo/bar//../%2e%2e%2f/*"},
 			mockCf: &cloudfront.MockCloudFrontClient{
 				Err:            nil,
 				CreateTime:     time.Unix(0, 0).UTC(),
@@ -173,7 +173,7 @@ func TestCreateInvalidation(t *testing.T) {
 				},
 				ID:      "ABC123",
 				Created: time.Unix(0, 0).UTC(),
-				Paths:   []string{"/foo/*", "/foo/a/*", "/foo/a%20bb%2Ec/bar/*", "/foo/*", "/foo/bar/%2e%2e%2f/*"}, // result should be cleaned paths with encoding
+				Paths:   []string{"/foo/*", "/foo/a/*", "/foo/a%20bb%2Ec/bar/*", "/foo/*", "/foo/%2e%2e%2f/*"}, // result should be cleaned paths with encoding
 			},
 			err: nil,
 		},
@@ -181,28 +181,10 @@ func TestCreateInvalidation(t *testing.T) {
 			// error, unauthorized paths
 			claims:           []string{"grp1"},
 			distributionName: "dis1",
-			paths:            []string{"/a/*", "/foo/a/b", "/a/../*", ".."},
+			paths:            []string{"/a/*", "/foo/a/b", "/a/../*", "..", "/foo/../*", "/foo/a/..//../*"},
 			mockCf:           &cloudfront.MockCloudFrontClient{},
 			want:             nil,
-			err:              NewInvalidationError(BadRequestErrorCode, errors.New("unauthorized paths"), fmt.Errorf("unauthorized paths: %v", []string{"/a/*", "/a/../*", ".."})),
-		},
-		{
-			// error, unauthorized paths with URL encoding
-			claims:           []string{"grp1"},
-			distributionName: "dis1",
-			paths:            []string{"/foo/%2e%2e%2f/*", "/foo/a/..%2f/%2e%2e/*"},
-			mockCf:           &cloudfront.MockCloudFrontClient{},
-			want:             nil,
-			err:              NewInvalidationError(BadRequestErrorCode, errors.New("unauthorized paths"), fmt.Errorf("unauthorized paths: %v", []string{"/foo/%2e%2e%2f/*", "/foo/a/..%2f/%2e%2e/*"})),
-		},
-		{
-			// error invalid URL encoding
-			claims:           []string{"grp1"},
-			distributionName: "dis1",
-			paths:            []string{"/foo/ab%2/*"},
-			mockCf:           &cloudfront.MockCloudFrontClient{},
-			want:             nil,
-			err:              NewInvalidationError(BadRequestErrorCode, errors.New("invalid encoded path"), fmt.Errorf("invalid encoded path: %v", "/foo/ab%2/*")),
+			err:              NewInvalidationError(BadRequestErrorCode, errors.New("unauthorized paths"), []string{"/a/*", "/a/../*", "..", "/foo/../*", "/foo/a/..//../*"}),
 		},
 		{
 			// error from cloudfront api
