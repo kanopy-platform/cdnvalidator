@@ -23,7 +23,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-//go:embed templates
+//go:embed ui
 var embeddedFS embed.FS
 
 type Server struct {
@@ -36,7 +36,7 @@ type Server struct {
 func New(config *config.Config, cloudfront *cloudfront.Client, opts ...Option) (http.Handler, error) {
 	s := &Server{
 		router:   mux.NewRouter(),
-		template: template.Must(template.ParseFS(embeddedFS, "templates/*.html")),
+		template: template.Must(template.ParseFS(embeddedFS, "ui/*.html")),
 	}
 
 	if config == nil {
