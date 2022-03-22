@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+{{ block "head" . }}{{end}}
+<body onload="fetchDistributions()">
+  <div class="container">
+
+    <script>
+      function fetchDistributions() {
+        //alert(`Fetching distributions`);
+      }
+    </script>
+
+    <!-- Create an Invalidation Request -->
+    <div class="card">
+      <div class="card-body">
+        <form>
+          <legend>Create Invalidation</legend>
+          <div class="mb-3">
+            <label for="create-invalidation-distribution" class="form-label">Distribution</label>
+            <select id="create-invalidation-distribution" class="form-select">
+            {{range .Distributions}}
+              <option value={{ . }}>{{ . }}</option>
+            {{end}}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="create-invalidation-paths" class="form-label">Paths (Comma separated list)</label>
+            <input type="text" class="form-control" id="create-invalidation-paths" placeholder="/docs/*, /docs-qa/*">
+          </div>
+
+          <button type="button" class="btn btn-primary", onclick="createInvalidation()">Submit</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Space divider -->
+    <div class="form-group">
+      &nbsp;
+    </div>
+
+    <!-- Get Invalidation Status -->
+    <div class="card">
+      <div class="card-body">
+        <form>
+          <legend>Get Invalidation Status</legend>
+          <div class="mb-3">
+            <label for="get-invalidation-distribution" class="form-label">Distribution</label>
+            <select id="get-invalidation-distribution" class="form-select">
+            {{range .Distributions}}
+              <option value={{ . }}>{{ . }}</option>
+            {{end}}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="get-invalidation-id" class="form-label">Invalidation ID</label>
+            <input type="text" class="form-control" id="get-invalidation-id" placeholder="1123456ABCDEF">
+          </div>
+
+          <button type="button" class="btn btn-primary", onclick="getInvalidation()">Submit</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function apiPrefix() {
+      return "/api/v1beta1/distributions"
+    }
+
+    async function getJson(url = "") {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Accept": "application/json",
+        }
+      })
+      .catch(error => {
+        throw new Error(error)
+      })
+
+      if (!response.ok) {
+        const message = `GET ${url} returned error: ${response.status}`;
+        throw new Error(message)
+      }
+
+      const data = await response.json();
+      return data;
+    }
+
+    async function postJson(url = "", postData = {}) {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(postData),
+      })
+      .catch(error => {
+        throw new Error(error)
+      })
+
+      if (!response.ok) {
+        const message = `POST ${url} returned error: ${response.status}`;
+        throw new Error(message)
+      }
+
+      const data = await response.json();
+      return data;
+    }
+
+    async function createInvalidation() {
+      console.log("YUZHOU DEBUG in createInvalidation")
+
+      let distribution = document.getElementById("create-invalidation-distribution").value;
+      let url = apiPrefix().concat("/", distribution, "/invalidations");
+
+      let commaSeparatedPaths = document.getElementById("create-invalidation-paths").value;
+      let pathsArr = commaSeparatedPaths.split(",").map(function(item) {
+        return item.trim();
+      });
+
+      await postJson(url, { paths: pathsArr })
+      .then(data => {
+        console.log(data)
+      })
+      .catch(error => {
+        console.log(error.message);
+      });
+    }
+
+    async function getInvalidation() {
+      console.log("YUZHOU DEBUG in getInvalidation")
+
+      let distribution = document.getElementById("get-invalidation-distribution").value;
+      let invalidationID = document.getElementById("get-invalidation-id").value;
+      let url = apiPrefix().concat("/", distribution, "/invalidations/", invalidationID);
+
+      await getJson(url)
+      .then(data => {
+        console.log(data)
+      })
+      .catch(error => {
+        console.log(error.message);
+      });
+    }
+  </script>
+
+  {{ block "bootstrap_scripts" . }}{{end}}
+</body>
+</html>
