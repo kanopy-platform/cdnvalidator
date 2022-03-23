@@ -44,7 +44,6 @@ steps:
       secret_key:
         from_secret: ecr_secret_key
     when:
-      event: [push]
       branch:
         exclude: [main]
 
