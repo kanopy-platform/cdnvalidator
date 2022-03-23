@@ -26,17 +26,6 @@ steps:
       - licensed cache
       - licensed status
 
-  - name: build
-    image: plugins/kaniko-ecr
-    pull: always
-    volumes:
-      - name: cache
-        path: /go
-    settings:
-      no_push: true
-    when:
-      event: [pull_request]
-
   - name: publish-dev
     image: plugins/kaniko-ecr
     pull: always
