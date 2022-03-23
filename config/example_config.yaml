@@ -1,16 +1,14 @@
 ---
 distributions:
-  sandbox-infra-test:
-    id: "E12AN388E0D4UU"
-    prefix: "/infra-test-only"
-  test-1:
-    id: "E12AN388E0D4UU"
-    prefix: "/infra-test-only/test-1"
-  test-2:
-    id: "ABCD1234"
-    prefix: "/infra-test-only/test-2"
+  dis1:
+    id: "ABC123"
+    prefix: "/foo"
+  dis2:
+    id: "DEF456"
+    prefix: "/bar"
 entitlements:
-  10gen-devops-core:
-    - sandbox-infra-test
-    - test-1
-    - test-2
+  grp1:
+    - dis1
+    - dis2
+  grp2:
+    - dis2
