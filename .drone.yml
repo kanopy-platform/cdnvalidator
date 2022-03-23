@@ -3,6 +3,9 @@ kind: pipeline
 type: kubernetes
 name: default
 
+trigger:
+  branch: [main, feature/ui_page]
+
 workspace:
   path: /go/src/github.com/${DRONE_REPO}
 
@@ -45,7 +48,7 @@ steps:
       secret_key:
         from_secret: ecr_secret_key
     when:
-      event: [push, pull_request]
+      event: [push]
 
   - name: publish-tag
     image: plugins/kaniko-ecr
