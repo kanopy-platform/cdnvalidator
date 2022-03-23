@@ -3,6 +3,9 @@ kind: pipeline
 type: kubernetes
 name: default
 
+trigger:
+  branch: [main]
+
 workspace:
   path: /go/src/github.com/${DRONE_REPO}
 
@@ -26,27 +29,16 @@ steps:
       - licensed cache
       - licensed status
 
-  - name: publish-dev
+  - name: build
     image: plugins/kaniko-ecr
     pull: always
     volumes:
       - name: cache
         path: /go
     settings:
-      create_repository: true
-      repo: ${DRONE_REPO_NAME}
-      tags:
-        - dev-git-${DRONE_COMMIT_SHA:0:7}
-      registry:
-        from_secret: ecr_registry
-      access_key:
-        from_secret: ecr_access_key
-      secret_key:
-        from_secret: ecr_secret_key
+      no_push: true
     when:
-      event: [push]
-      branch:
-        exclude: [main]
+      event: [pull_request]
 
   - name: publish
     image: plugins/kaniko-ecr
@@ -68,7 +60,6 @@ steps:
         from_secret: ecr_secret_key
     when:
       event: [push]
-      branch: [main]
 
   - name: publish-tag
     image: plugins/kaniko-ecr
