@@ -11,17 +11,20 @@ async function getJson(url = "") {
         "Accept": "application/json",
         }
     })
-    .catch(error => {
-        throw new Error(error);
-    })
 
-    const data = await response.json();
-
-    if (!response.ok) {
-        const message = `GET ${url} returned error: ${response.status} ${data.status}`;
-        throw new Error(message);
+    if (response.ok) {
+        let data = await response.json();
+        return data;
     }
-    return data;
+
+    const responseText = await response.text();
+    let message;
+    try {
+        message = JSON.parse(responseText).status;
+    } catch {
+        message = `GET ${url} returned error: ${response.status} ${response.statusText}: ${responseText}`;
+    }
+    throw new Error(message);
 }
 
 async function postJson(url = "", postData = {}) {
@@ -33,31 +36,49 @@ async function postJson(url = "", postData = {}) {
         },
         body: JSON.stringify(postData),
     })
-    .catch(error => {
-        throw new Error(error);
-    })
 
-    const data = await response.json();
-
-    if (!response.ok) {
-        const message = `POST ${url} returned error: ${response.status} ${data.status}`;
-        throw new Error(message);
+    if (response.ok) {
+        let data = await response.json();
+        return data;
     }
-    return data;
+
+    const responseText = await response.text();
+    let message;
+    try {
+        message = JSON.parse(responseText).status;
+    } catch {
+        message = `POST ${url} returned error: ${response.status} ${response.statusText}: ${responseError}`;
+    }
+    throw new Error(message);
 }
 
-function appendOutput(header = "", details = "", data = {}) {
-    // Add item to side nav bar
+function getTime() {
+    let d = new Date();
+    return d.toLocaleTimeString();
+}
+
+function appendOutput(header = "", details = "", data = undefined) {
+    // Add timestamp to header
+    header = header + " : " + getTime();
+
+    // Add item to top of side nav bar
     let navBar = document.getElementById("nav-bar");
+    // Remove current active items
+    let activeElems = navBar.querySelector(".active");
+    if (activeElems !== null) {
+        activeElems.classList.remove("active");
+    }
 
     let linkNode = document.createElement("a");
-    linkNode.setAttribute("class", "list-group-item list-group-item-action");
+    linkNode.setAttribute("class", "list-group-item list-group-item-action active");
     linkNode.href = "#" + itemPrefix + itemCount;
     linkNode.innerHTML = header;
 
-    navBar.appendChild(linkNode);
+    navBar.insertBefore(linkNode, navBar.firstChild);
+    // Reset scroll to top
+    navBar.scrollTop = 0;
 
-    // Add to output box
+    // Add to top of output box
     let outputBox = document.getElementById("output-box");
 
     let headerNode = document.createElement("h4");
@@ -68,11 +89,16 @@ function appendOutput(header = "", details = "", data = {}) {
     paragraphNode.innerHTML = details;
 
     let preNode = document.createElement("pre");
-    preNode.textContent = JSON.stringify(data, undefined, 2);
+    if (data !== undefined) {
+        preNode.textContent = JSON.stringify(data, undefined, 2);
+    }
 
-    outputBox.appendChild(headerNode);
-    outputBox.appendChild(paragraphNode);
-    outputBox.appendChild(preNode);
+    // Must insert in reverse order of display
+    outputBox.insertBefore(preNode, outputBox.firstChild);
+    outputBox.insertBefore(paragraphNode, outputBox.firstChild);
+    outputBox.insertBefore(headerNode, outputBox.firstChild);
+    // Reset scroll to top
+    outputBox.scrollTop = 0;
 
     itemCount++;
 
@@ -104,9 +130,6 @@ async function populateDistributionDropdowns() {
 }
 
 async function createInvalidation() {
-    // show loading spinner
-    document.getElementById("loading").style.visibility="visible";
-
     // construct the POST request
     let distribution = document.getElementById("create-invalidation-distribution").value;
     let url = apiPrefix.concat("/", distribution, "/invalidations");
@@ -115,6 +138,15 @@ async function createInvalidation() {
     let pathsArr = commaSeparatedPaths.split(",").map(function(item) {
         return item.trim().replace(/^"(.*)"$/, "$1");   // remove surrounding whitespace and quotes if any
     });
+
+    if (pathsArr.length == 1 && pathsArr[0] == "") {
+        appendOutput("Create Error", "Paths is empty");
+        return;
+    }
+
+    // disable submit button, show loading spinner
+    document.getElementById("create-invalidation-button").disabled = true;
+    document.getElementById("loading").style.visibility="visible";
 
     let details = "<b>Distribution:</b> " + distribution + "<br />";
     details = details + "<b>Paths:</b> " + pathsArr.join(",") + "<br />";
@@ -128,22 +160,30 @@ async function createInvalidation() {
         appendOutput("Create Error", details, error.message);
     });
 
-    // hide loading spinner
+    // enable submit button, hide loading spinner
+    document.getElementById("create-invalidation-paths").value = "";
+    document.getElementById("create-invalidation-button").disabled = false;
     document.getElementById("loading").style.visibility="hidden";
 }
 
 
 
 async function getInvalidation() {
-    // show loading spinner
-    document.getElementById("loading").style.visibility="visible";
-
     // construct the GET request
     let distribution = document.getElementById("get-invalidation-distribution").value;
     let invalidationID = document.getElementById("get-invalidation-id").value;
     invalidationID = invalidationID.replace(/^"(.*)"$/, "$1");  // remove surrounding quotes if any
-    let url = apiPrefix.concat("/", distribution, "/invalidations/", invalidationID);
+    if (invalidationID == "") {
+        appendOutput("Get Error", "Invalidation ID is empty");
+        return;
+    }
 
+    // disable submit button, show loading spinner
+    document.getElementById("get-invalidation-button").disabled = true;
+    document.getElementById("loading").style.visibility="visible";
+
+    let url = apiPrefix.concat("/", distribution, "/invalidations/", invalidationID);
+    
     let details = "<b>Distribution:</b> " + distribution + "<br />";
     details = details + "<b>Invalidation ID:</b> " + invalidationID + "<br />";
 
@@ -156,6 +196,8 @@ async function getInvalidation() {
         appendOutput("Get Error", details, error.message);
     });
 
-    // hide loading spinner
+    // enable submit button, hide loading spinner
+    document.getElementById("get-invalidation-id").value = "";
+    document.getElementById("get-invalidation-button").disabled = false;
     document.getElementById("loading").style.visibility="hidden";
 }

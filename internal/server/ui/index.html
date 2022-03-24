@@ -10,8 +10,8 @@
 
   <style>
     /* CSS for loading spinner */
-    #loading {width: 100%;height: 100%;top: 0px;left: 0px;position: fixed;display: block; z-index: 99}
-    #loading-image {position: absolute;top: 40%;left: 45%;z-index: 100} 
+    #loading {width: 100%;height: 100%;top: 0px;left: 0px;position: fixed;display: block;opacity: 0.5;filter: alpha(opacity=50);background-color: black;z-index: 99;}
+    #loading-image {position: absolute;top: 40%;left: 45%;z-index: 100;}
   </style>
 
   <title>CDN Validator</title>
@@ -44,7 +44,7 @@
                 <input type="text" class="form-control" id="create-invalidation-paths" placeholder="/docs/*, /docs-qa/*">
               </div>
 
-              <button type="button" class="btn btn-primary", onclick="createInvalidation()">Submit</button>
+              <button id="create-invalidation-button" type="button" class="btn btn-primary", onclick="createInvalidation()">Submit</button>
             </form>
           </div>
         </div>
@@ -71,7 +71,7 @@
                 <input type="text" class="form-control" id="get-invalidation-id" placeholder="1123456ABCDEF">
               </div>
 
-              <button type="button" class="btn btn-primary", onclick="getInvalidation()">Submit</button>
+              <button id="get-invalidation-button" type="button" class="btn btn-primary", onclick="getInvalidation()">Submit</button>
             </form>
           </div>
         </div>
@@ -79,7 +79,7 @@
 
       <!-- Right Pane -->
       <div class="col-lg-6">
-        <div class="card" style="height: 600px;">
+        <div class="card h-100">
           <div class="card-body">
             <legend>Output</legend>
             <div class="row">
