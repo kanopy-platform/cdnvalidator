@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/kanopy-platform/cdnvalidator/internal/config"
@@ -56,6 +57,7 @@ func (d *DistributionService) List(ctx context.Context) ([]string, error) {
 	for name := range distributions {
 		ret = append(ret, name)
 	}
+	sort.Strings(ret)
 
 	return ret, nil
 }

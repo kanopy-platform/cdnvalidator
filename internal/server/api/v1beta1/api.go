@@ -134,6 +134,11 @@ func getInvalidation(ds DistributionService) http.HandlerFunc {
 
 		result, err := ds.GetInvalidationStatus(r.Context(), name, invalidationID)
 		if err != nil {
+			if v1beta1.ErrorBadRequest(err) {
+				writeJSON(w, err, http.StatusBadRequest)
+				return
+			}
+
 			if v1beta1.ErrorResourceNotFound(err) {
 				writeJSON(w, err, http.StatusNotFound)
 				return

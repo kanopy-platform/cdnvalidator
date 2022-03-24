@@ -89,6 +89,7 @@ func (c *RootCommand) runE(cmd *cobra.Command, args []string) error {
 	s, err := server.New(
 		config,
 		cloudfrontClient,
+		server.WithAuthCookieName(viper.GetString("auth-cookie")),
 	)
 	if err != nil {
 		return err
