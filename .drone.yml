@@ -3,9 +3,6 @@ kind: pipeline
 type: kubernetes
 name: default
 
-trigger:
-  branch: [main]
-
 workspace:
   path: /go/src/github.com/${DRONE_REPO}
 
@@ -28,17 +25,6 @@ steps:
     commands:
       - licensed cache
       - licensed status
-
-  - name: build
-    image: plugins/kaniko-ecr
-    pull: always
-    volumes:
-      - name: cache
-        path: /go
-    settings:
-      no_push: true
-    when:
-      event: [pull_request]
 
   - name: publish
     image: plugins/kaniko-ecr
