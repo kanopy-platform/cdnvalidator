@@ -2,15 +2,15 @@
 
 [![Build Status](https://drone.corp.mongodb.com/api/badges/kanopy-platform/cdnvalidator/status.svg)](https://drone.corp.mongodb.com/kanopy-platform/cdnvalidator)
 
-The cdnvaildator provides multi-tenant entitlement abstraction layer into CloudFront invalidations which may have different owners, performance, and cache control requirements.
+The cdnvalidator provides an abstraction layer for Cloudfront invalidations. It delegates access for different owners of distribution paths to manage performance and cache control requirements.
 
 ## Architecture
 
-The CDN Vaildator provides a RESTful API detailed in the [OpenAPI documentation](./swagger/swagger.json).
+The CDN Validator provides a RESTful API detailed in the [OpenAPI documentation](./swagger/swagger.json).
 
 ### Authn/Authz
 
-The service relies on being deployed behind a reverse proxy that handles forward authentication and validation of the JWT.  Authorization decisions will be made against the `groups` and `scps` claims of a JWT.
+The service relies on being deployed behind a reverse proxy that handles forward authentication and validation of the JWT.  Authorization decisions will be made against the `groups` and `scp` claims of a JWT.
 
 ## Configuration
 
