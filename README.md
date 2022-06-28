@@ -1,7 +1,5 @@
 # cdnvalidator service
 
-[![Build Status](https://drone.corp.mongodb.com/api/badges/kanopy-platform/cdnvalidator/status.svg)](https://drone.corp.mongodb.com/kanopy-platform/cdnvalidator)
-
 The cdnvalidator provides an abstraction layer for Cloudfront invalidations. It delegates access for different owners of distribution paths to manage performance and cache control requirements.
 
 ## Architecture
