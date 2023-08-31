@@ -17,7 +17,7 @@ steps:
       - name: cache
         path: /go
     commands:
-      - apk add make
+      - go mod download
       - make test
 
   - name: license-check
