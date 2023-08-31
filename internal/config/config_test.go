@@ -2,7 +2,6 @@ package config
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -178,7 +177,7 @@ entitlements:
 func TestLoad(t *testing.T) {
 	config := emptyConfig()
 
-	tmpFile, err := ioutil.TempFile(os.TempDir(), "cdnvalidator-")
+	tmpFile, err := os.CreateTemp(os.TempDir(), "cdnvalidator-")
 	assert.NoError(t, err)
 	defer os.Remove(tmpFile.Name())
 
