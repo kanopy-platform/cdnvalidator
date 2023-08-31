@@ -62,11 +62,14 @@ func TestAuthorizationResponses(t *testing.T) {
 
 	tests := []struct {
 		middleware func(http.Handler) http.Handler
+		name       string
 		token      string
+		skipBearer bool
 		want       int
 	}{
 		{
 			token:      "",
+			name:       "no providers",
 			middleware: New(),
 			want:       401,
 		},
@@ -74,25 +77,89 @@ func TestAuthorizationResponses(t *testing.T) {
 		{
 			token:      "invalidtoken",
 			middleware: New(),
+			name:       "invalid token, no cookie",
 			want:       401,
 		},
 
 		{
 			token:      rawToken,
 			middleware: New(WithCookieName("testme")),
+			name:       "valid named cookie",
 			want:       200,
 		},
-
+		{
+			token:      "",
+			middleware: New(WithCookieName("testme")),
+			name:       "empty named cookie",
+			want:       401,
+		},
 		{
 			token:      rawToken,
 			middleware: New(WithAuthorizationHeader(), WithCookieName("testme")),
+			name:       "valid AuthorizationHeade, valid cookie",
 			want:       200,
 		},
 
 		{
 			token:      rawToken,
 			middleware: New(WithAuthorizationHeader()),
+			name:       "valid Authorization BearerHeader",
 			want:       200,
+		},
+		{
+			token:      rawToken,
+			middleware: New(WithHeaderName("testy")),
+			name:       "valid Named Header",
+			want:       200,
+		},
+		{
+			token:      "invalid",
+			middleware: New(WithHeaderName("testy")),
+			name:       "invalid Named Header",
+			want:       403,
+		},
+		{
+			token:      rawToken,
+			middleware: New(WithHeaderName("empty")),
+			name:       "empty Named Header",
+			want:       401,
+		},
+		{
+			token:      rawToken,
+			middleware: New(WithCookieName("testme"), WithHeaderName("testy")),
+			name:       "valid Named Header, valid cookie",
+			want:       200,
+		},
+		{
+			token:      rawToken,
+			middleware: New(WithAuthorizationHeader(), WithCookieName("testme"), WithHeaderName("testy")),
+			name:       "invalid Authorization Bearer header, valid Named Header, valid cookie",
+			skipBearer: true,
+			want:       200,
+		},
+		{
+			token:      rawToken,
+			middleware: New(WithAuthorizationHeader(), WithCookieName("testme"), WithHeaderName("testy")),
+			name:       "valid Authorization Bearer header, valid Named Header, valid cookie",
+			want:       200,
+		},
+		{
+			token:      rawToken,
+			middleware: New(WithAuthorizationHeader(), WithCookieName("invalid"), WithHeaderName("testy")),
+			name:       "valid Authorization Bearer header, valid Named Header, invalid cookie",
+			want:       200,
+		},
+		{
+			token:      rawToken,
+			middleware: New(WithCookieName("testme"), WithHeaderName("invalid")),
+			name:       "empty Named Header, invalid cookie",
+			want:       401,
+		},
+		{
+			token:      "invalid",
+			middleware: New(WithCookieName("testme"), WithHeaderName("testy")),
+			name:       "invalid Named Header, valid cookie",
+			want:       403,
 		},
 	}
 
@@ -101,7 +168,11 @@ func TestAuthorizationResponses(t *testing.T) {
 
 		req, err := http.NewRequest("GET", "/some-auth-path", nil)
 		assert.NoError(t, err)
-		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", test.token))
+
+		if !test.skipBearer {
+			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", test.token))
+		}
+		req.Header.Set("testy", test.token)
 
 		req.AddCookie(&http.Cookie{
 			Name:  "testme",
@@ -114,6 +185,6 @@ func TestAuthorizationResponses(t *testing.T) {
 
 		// wrap the test handler in the authz middleware
 		test.middleware(handler).ServeHTTP(rr, req)
-		assert.Equal(t, test.want, rr.Result().StatusCode)
+		assert.Equal(t, test.want, rr.Result().StatusCode, test.name)
 	}
 }

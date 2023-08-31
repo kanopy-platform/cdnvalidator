@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/textproto"
 	"strings"
 
 	"github.com/kanopy-platform/cdnvalidator/internal/core"
@@ -13,6 +14,7 @@ import (
 
 type middleware struct {
 	authCookieName    string
+	authHeaderName    string
 	authHeaderEnabled bool
 }
 
@@ -31,7 +33,8 @@ func (m *middleware) addClaims(ctx context.Context, claims []string) context.Con
 }
 
 func (m *middleware) getAuthorizationToken(req *http.Request) (string, error) {
-	if m.authHeaderEnabled {
+	switch {
+	case m.authHeaderEnabled:
 		if _, ok := req.Header["Authorization"]; ok {
 			v := req.Header.Get("Authorization")
 			if strings.HasPrefix(v, "Bearer") {
@@ -39,19 +42,28 @@ func (m *middleware) getAuthorizationToken(req *http.Request) (string, error) {
 			}
 			return v, nil
 		}
-	}
+		fallthrough
+	case m.authHeaderName != "":
+		protoHeaderName := textproto.CanonicalMIMEHeaderKey(m.authHeaderName)
+		if _, ok := req.Header[protoHeaderName]; ok {
+			return req.Header.Get(m.authHeaderName), nil
+		}
 
-	// check cookie
-	v, err := req.Cookie(m.authCookieName)
-	if err != nil {
-		return "", err
-	}
+		return "", fmt.Errorf("No %s header found", m.authHeaderName)
 
-	if v.Value == "" {
-		return "", fmt.Errorf("token empty")
-	}
+	default:
+		// check cookie
+		v, err := req.Cookie(m.authCookieName)
+		if err != nil {
+			return "", err
+		}
 
-	return v.Value, nil
+		if v.Value == "" {
+			return "", fmt.Errorf("token empty")
+		}
+
+		return v.Value, nil
+	}
 }
 
 func (m *middleware) handler(next http.Handler) http.Handler {
