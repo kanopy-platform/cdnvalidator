@@ -74,7 +74,7 @@ func TestAuthorizationResponses(t *testing.T) {
 		{
 			token:      "invalidtoken",
 			middleware: New(),
-			want:       403,
+			want:       401,
 		},
 
 		{
