@@ -3,7 +3,7 @@ WORKDIR /go/src/app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN go build -o /go/bin/app
+RUN CGO_ENABLED=0 go build -o /go/bin/app
 
 FROM debian:buster-slim
 RUN apt-get update && apt-get install --yes ca-certificates
