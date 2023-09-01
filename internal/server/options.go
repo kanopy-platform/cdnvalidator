@@ -8,3 +8,10 @@ func WithAuthCookieName(name string) Option {
 		return nil
 	}
 }
+
+func WithAuthHeaderName(name string) Option {
+	return func(s *Server) error {
+		s.authHeaderName = name
+		return nil
+	}
+}

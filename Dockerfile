@@ -1,11 +1,11 @@
-FROM golang:1.16 as build
+FROM golang:1.20 as build
 WORKDIR /go/src/app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN go build -o /go/bin/app
+RUN CGO_ENABLED=0 go build -o /go/bin/app
 
-FROM debian:buster-slim
+FROM debian:bookworm-slim
 RUN apt-get update && apt-get install --yes ca-certificates
 RUN groupadd -r app && useradd --no-log-init -r -g app app
 USER app

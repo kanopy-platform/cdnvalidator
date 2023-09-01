@@ -8,6 +8,12 @@ func WithCookieName(name string) Option {
 	}
 }
 
+func WithHeaderName(name string) Option {
+	return func(m *middleware) {
+		m.authHeaderName = name
+	}
+}
+
 func WithAuthorizationHeader() Option {
 	return func(m *middleware) {
 		m.authHeaderEnabled = true

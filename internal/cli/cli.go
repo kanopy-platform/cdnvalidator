@@ -32,6 +32,7 @@ func NewRootCommand() *cobra.Command {
 	cmd.PersistentFlags().String("log-level", "info", "Configure log level")
 	cmd.PersistentFlags().String("listen-address", ":8080", "Server listen address")
 	cmd.PersistentFlags().String("auth-cookie", "auth_token", "Auth cookie name")
+	cmd.PersistentFlags().String("auth-header", "", "Header name for the auth token, takes precedence over auth-cookie when set.")
 	cmd.PersistentFlags().String("config-file", "", "Configuration file name")
 	cmd.PersistentFlags().String("aws-region", "us-east-1", "AWS region for Cloudfront")
 	cmd.PersistentFlags().String("aws-key", "", "AWS static credential key for Cloudfront")
@@ -90,6 +91,7 @@ func (c *RootCommand) runE(cmd *cobra.Command, args []string) error {
 		config,
 		cloudfrontClient,
 		server.WithAuthCookieName(viper.GetString("auth-cookie")),
+		server.WithAuthHeaderName(viper.GetString("auth-header")),
 	)
 	if err != nil {
 		return err

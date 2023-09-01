@@ -30,6 +30,7 @@ type Server struct {
 	router         *mux.Router
 	template       *template.Template
 	authCookieName string
+	authHeaderName string
 }
 
 func New(config *config.Config, cloudfront *cloudfront.Client, opts ...Option) (http.Handler, error) {
@@ -60,7 +61,7 @@ func New(config *config.Config, cloudfront *cloudfront.Client, opts ...Option) (
 	s.router.PathPrefix("/ui/").Handler(http.FileServer(http.FS(embeddedFS)))
 
 	authmiddleware := authorization.New(authorization.WithCookieName(s.authCookieName),
-		authorization.WithAuthorizationHeader())
+		authorization.WithAuthorizationHeader(), authorization.WithHeaderName(s.authHeaderName))
 
 	api := v1beta1.New(s.router,
 		v1beta1_ds.New(config, cloudfront),
