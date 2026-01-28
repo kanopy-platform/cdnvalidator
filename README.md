@@ -1,10 +1,10 @@
 # cdnvalidator service
 
-The cdnvalidator provides an abstraction layer for Cloudfront invalidations. It delegates access for different owners of distribution paths to manage performance and cache control requirements.
+The cdnvalidator provides an abstraction layer for CloudFront invalidations. It delegates access for different owners of distribution paths to manage performance and cache control requirements.
 
 ## Architecture
 
-The CDN Validator provides a RESTful API detailed in the [OpenAPI documentation](./swagger/swagger.json).
+The cdnvalidator provides a RESTful API detailed in the [OpenAPI documentation](./swagger/swagger.json).
 
 ### Authn/Authz
 
@@ -24,6 +24,6 @@ entitlements:
 
 The `sandbox` is the vanity name representing a virtual distribution along the path prefix `/my/path`.  The entitlement `mygroup` will only be allowed to submit invalidation requests for `/my/path/*` resources.
 
-* Many vanity names MAY be created with the same Cloudfront distribution ID
+* Many vanity names MAY be created with the same CloudFront distribution ID
 * Entitlements MAY be assigned to more than one distribution.
-* Vanity distributions MUST not conflict in paths. 
+* Vanity distributions MUST NOT conflict in paths.
