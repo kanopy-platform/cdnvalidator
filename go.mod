@@ -1,6 +1,6 @@
 module github.com/kanopy-platform/cdnvalidator
 
-go 1.20
+go 1.24.0
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.14.0
@@ -11,10 +11,10 @@ require (
 	github.com/fsnotify/fsnotify v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/prometheus/client_golang v1.12.1
-	github.com/sirupsen/logrus v1.8.1
+	github.com/sirupsen/logrus v1.9.4
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.10.0
 	gopkg.in/square/go-jose.v2 v2.6.0
 	sigs.k8s.io/yaml v1.3.0
 )
@@ -48,11 +48,11 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
-	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
-	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
-	golang.org/x/text v0.3.6 // indirect
+	golang.org/x/crypto v0.47.0 // indirect
+	golang.org/x/sys v0.40.0 // indirect
+	golang.org/x/text v0.33.0 // indirect
 	google.golang.org/protobuf v1.26.0 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
